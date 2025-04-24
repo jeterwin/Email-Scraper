@@ -4,7 +4,8 @@ import Button from '@mui/material/Button';
 import MuiCard from '@mui/material/Card';
 import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
-import Link from '@mui/material/Link';
+import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -31,6 +32,7 @@ export default function LogInCard() {
     const [passwordError, setPasswordError] = React.useState(false);
     const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
     const [showPassword, setShowPassword] = React.useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = (event) => {
         if (emailError || passwordError) {
@@ -149,16 +151,29 @@ export default function LogInCard() {
                         <Typography variant="body2">
                             Don't have an account?
                         </Typography>
-                        <Link href="/" underline="hover" variant="body2">
-                            Sign up
-                        </Link>
+                        <Box component={Link} to="/" sx={{
+                                fontFamily: 'Arial',
+                                fontSize: '14px',
+                                textDecoration: 'none',
+                                color: 'inherit',
+                                '&:hover': {
+                                    textDecoration: 'underline',
+                                },
+                            }}
+                        >
+                            Sign Up
+                        </Box>
                     </Box>
                 </FormControl>
                 <Button
                     type="submit"
                     fullWidth
                     variant="contained"
-                    onClick={validateInputs}
+                    onClick={() => {
+                        if (validateInputs()) {
+                            navigate('/dashboard');
+                        }
+                    }}
                     sx={{
                         textTransform: 'none',
                         height: '7vh',

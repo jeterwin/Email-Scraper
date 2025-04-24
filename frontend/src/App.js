@@ -1,9 +1,20 @@
-import React from 'react';  // Import your SignUpCard component
-import LogIn from './LogIn';  // Create and import your LogIn component
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import SignUp from './pages/SignUp';
+import LogIn from './pages/LogIn';
+import Dashboard from './pages/Dashboard';
+import EventPage from "./pages/EventPage";
 
 function App() {
     return (
-        <LogIn />
+        <Router>
+            <Routes>
+                <Route path="/" element={<SignUp />} />
+                <Route path="/login" element={<LogIn />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/events" element={<EventPage />} />
+            </Routes>
+        </Router>
     );
 }
 

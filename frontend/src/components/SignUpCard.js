@@ -4,7 +4,8 @@ import Button from '@mui/material/Button';
 import MuiCard from '@mui/material/Card';
 import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
-import Link from '@mui/material/Link';
+import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
@@ -33,6 +34,7 @@ export default function SignUpCard() {
     const [passwordError, setPasswordError] = React.useState(false);
     const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
     const [showPassword, setShowPassword] = React.useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = (event) => {
         if (nameError || emailError || passwordError) {
@@ -55,6 +57,7 @@ export default function SignUpCard() {
         const name = document.getElementById('name');
         const email = document.getElementById('email');
         const password = document.getElementById('password');
+
 
         let isValid = true;
 
@@ -177,16 +180,29 @@ export default function SignUpCard() {
                         <Typography variant="body2">
                             Already have an account?
                         </Typography>
-                        <Link href="/" underline="hover" variant="body2">
+                        <Box component={Link} to="/login" sx={{
+                                fontFamily: 'Arial',
+                                fontSize: '14px',
+                                textDecoration: 'none',
+                                color: 'inherit',
+                                '&:hover': {
+                                    textDecoration: 'underline',
+                                },
+                            }}
+                        >
                             Log In
-                        </Link>
+                        </Box>
                     </Box>
                 </FormControl>
                 <Button
                     type="submit"
                     fullWidth
                     variant="contained"
-                    onClick={validateInputs}
+                    onClick={() => {
+                        if (validateInputs()) {
+                            navigate('/dashboard');
+                        }
+                    }}
                     sx={{
                         textTransform: 'none',
                         height: '7vh',
