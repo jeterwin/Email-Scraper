@@ -32,12 +32,17 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Admin') {
             margin-top: 20px;
         }
         th, td {
-            padding: 8px;
+            border: 1px solid black;
+            padding: 10px;
             text-align: left;
-            border: 1px solid #ddd;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #ddd;
+            cursor: pointer;
+        }
+        .highlight {
+            background-color: #d1ffd1;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -51,17 +56,40 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Admin') {
 
 <div id="usersTable"></div>
 
+<button onclick="fetchData()">Show Meetings</button>
+
+<label>Sort by:</label>
+<select id="sortBy">
+    <option value="meeting_time">Meeting Time</option>
+    <option value="interested">Interested</option>
+</select>
+
+<div id="data-container"></div>
+
 <script>
 function fetchUsers() {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "Database/fetch_users.php", true);
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            document.getElementById("usersTable").innerHTML = xhr.responseText;
-        }
-    };
-    xhr.send();
-}
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "./Database/fetch_users.php", true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                document.getElementById("usersTable").innerHTML = xhr.responseText;
+            }
+        };
+        xhr.send();
+    }
+
+    function fetchData() {
+        let sortBy = document.getElementById("sortBy").value;
+        
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", "./Database/fetch_scrape_results.php?sortBy=" + sortBy, true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                document.getElementById("data-container").innerHTML = xhr.responseText;
+            }
+        };
+        xhr.send();
+    }
 </script>
 
 </body>

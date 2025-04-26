@@ -41,7 +41,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($_POST["username"] != "" && $_POST["password"] != "") {
         $username = $_POST["username"];
         $password = $_POST["password"];
-        $password_salt = "test1234";
 
         if (login_user($conn, $username, $password)) {
             echo "Successfully logged in!";

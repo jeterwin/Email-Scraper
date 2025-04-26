@@ -21,14 +21,32 @@ function register_user($conn, $username, $password, $email, $role)
         return false;
     }
 
-    # TODO Check if the username / email have entries already
+    # Check if the username / email have entries already
+    $stmt = $conn->prepare("SELECT username, email FROM users WHERE username = ? OR email = ?");
+    $stmt->bind_param("ss", $username, $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if($result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            if($row["username"] === $username) {
+                echo "Username already taken! <br>";
+                return false;
+            }
+            if($row["email"] === $email) {
+                echo "Email already taken! <br>";
+                return false;
+            }
+        }
+    }
 
     $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
 
-    $stmt = $conn->prepare("INSERT INTO Users(username, password, email, role) VALUES (?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO users(username, password, email, role) VALUES (?, ?, ?, ?)");
     $stmt->bind_param("ssss", $username, $hashedPassword, $email, $role);
 
     $success = $stmt->execute();
+
 
     if ($success) {
         echo "User registered successfully!";

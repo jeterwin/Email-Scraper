@@ -8,18 +8,19 @@
 </head>
 
 <body>
-    <form action="/Auth/signup.php" method="post">
+    <form action="../Auth/signup.php" method="post">
+        <h3>Register</h3><br>
         <label>Username:</label><br>
-        <input type="text" name="username">
+        <input type="text" name="username"><br>
 
-        <label>Password:</label>
-        <input type="password" name="password">
+        <label>Password:</label><br>
+        <input type="password" name="password"><br>
 
-        <label>Email:</label>
-        <input type="text" name="email">
+        <label>Email:</label><br>
+        <input type="text" name="email"><br>
 
-        <label>Choose a role for the user from this list:
-            <input list="browsers" name="role" /></label>
+        <label>Choose a role for the user from this list:<br>
+            <input list="browsers" name="role" /></label><br>
         <datalist id="browsers">
             <option value="User">
             <option value="Admin">
@@ -29,14 +30,15 @@
     </form>
     <br>
     <br>
-    <form action="/Auth/login.php" method="post">
+    <form action="../Auth/login.php" method="post">
+        <h3>Login</h3>
         <label>Username:</label><br>
-        <input type="text" name="username">
+        <input type="text" name="username"><br>
 
-        <label>Password:</label>
+        <label>Password:</label><br>
         <input type="password" name="password">
 
-        <input type="submit" value="Log in">
+        <input type="submit" value="Log in"><br>
     </form>
 </body>
 

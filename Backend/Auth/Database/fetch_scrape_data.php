@@ -25,7 +25,7 @@ require_once 'db.php';
             cursor: pointer;
         }
         .highlight {
-            background-color: #d1ffd1; /* Green background for interested users */
+            background-color: #d1ffd1;
             font-weight: bold;
         }
     </style>

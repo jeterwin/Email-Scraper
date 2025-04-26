@@ -1,50 +1,38 @@
 <?php
 require_once 'db.php';
 
-$sortBy = isset($_GET['sortBy']) ? $_GET['sortBy'] : 'meeting_time';
+$sortBy = $_GET['sortBy'] ?? 'meeting_time';
 
-$allowedSort = ['meeting_time', 'interested'];
-if (!in_array($sortBy, $allowedSort)) {
-    $sortBy = 'meeting_time';
-}
+$sql = "SELECT * FROM scrape_results";
+$result = $conn->query($sql);
 
-$query = "SELECT * FROM scrape_results ORDER BY $sortBy DESC";
-$result = $conn->query($query);
-
+$meetings = [];
 if ($result->num_rows > 0) {
-    echo "<table>
-            <tr>
-                <th>Message ID</th>
-                <th>Sender</th>
-                <th>Subject</th>
-                <th>Send Date</th>
-                <th>Meeting Title</th>
-                <th>Location</th>
-                <th>Time</th>
-                <th>Day</th>
-                <th>CC</th>
-                <th>Interested</th>
-            </tr>";
-
     while ($row = $result->fetch_assoc()) {
-        $interestedClass = $row['interested'] ? "highlight" : "";
-        echo "<tr class='$interestedClass'>
-                <td>{$row['message_id']}</td>
-                <td>{$row['sender']}</td>
-                <td>{$row['subject']}</td>
-                <td>{$row['send_date']}</td>
-                <td>{$row['meeting_title']}</td>
-                <td>{$row['meeting_location']}</td>
-                <td>{$row['meeting_time']}</td>
-                <td>{$row['meeting_day']}</td>
-                <td>{$row['cc']}</td>
-                <td>" . ($row['interested'] ? "✔ Yes" : "✖ No") . "</td>
-            </tr>";
+        $meetings[] = $row;
     }
-    echo "</table>";
-} else {
-    echo "<p>No meetings found.</p>";
 }
 
-$conn->close();
+if ($sortBy === 'interested') {
+    usort($meetings, function($a, $b) {
+        return $b['interested'] <=> $a['interested'];
+    });
+} else {
+    usort($meetings, function($a, $b) {
+        return strcmp($a['meeting_time'], $b['meeting_time']);
+    });
+}
+
+echo "<table>";
+echo "<tr><th>Day</th><th>Meeting Time</th><th>Topic</th><th>Interested</th></tr>";
+foreach ($meetings as $meeting) {
+    $highlight = $meeting['interested'] > 0 ? 'class="highlight"' : '';
+    echo "<tr $highlight>";
+    echo "<td>{$meeting['meeting_day']}</td>";
+    echo "<td>{$meeting['meeting_time']}</td>";
+    echo "<td>{$meeting['subject']}</td>";
+    echo "<td>{$meeting['interested']}</td>";
+    echo "</tr>";
+}
+echo "</table>";
 ?>
