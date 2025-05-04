@@ -1,0 +1,27 @@
+Invitatie- Cambridge Cheminformatics Meeting, 19 February 2025
+
+
+Dragi studenți,
+
+Vă fac cunoscut un eveniment care poate fi de interes.
+
+Cambridge Cheminformatics Meeting
+on 19 February 2025, at 5.30 PM UK time, Hybrid (at the CCDC/via Zoom)
+Zoom registration here: https://cam-ac-uk.zoom.us/meeting/register/PnzFPHY4QluWnHIW14-6Fw
+More information on the event series: https://c-inf.net/
+
+Programme
+
+Identifying Novel Nanomolar A2A Receptor Ligands by Combining Docking and Reinforcement Learning
+Morgan Thomas, Universitat Pompeu Fabra
+https://github.com/MorganCThomas
+
+Reversible Molecular Simulation for Training Classical and Machine Learning Force Fields
+Joe Greener, LMB
+https://www2.mrc-lmb.cam.ac.uk/group-leaders/a-to-g/joe-greener
+
+A Whirlwind Tour of Gaussian Processes for Chemistry
+Austin Tripp, Valence Labs
+https://www.austintripp.ca
+
+Toate cele bune!
