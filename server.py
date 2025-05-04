@@ -1,6 +1,5 @@
 import re
 from datetime import datetime
-from enum import nonmember
 
 from flask import Flask, request, jsonify
 
@@ -19,6 +18,7 @@ month_translations = {
     "decembrie": "December"
 }
 
+# HH:MM
 def convert_date(date_str):
     try:
         for ro, en in month_translations.items():
@@ -37,6 +37,8 @@ def convert_date(date_str):
         pass
     return None
 
+
+# DD.MM.YYYY
 def convert_time(time_str):
     try:
         return datetime.strptime(time_str.strip(), "%I:%M %p").strftime("%H:%M")
@@ -48,7 +50,7 @@ def convert_time(time_str):
 
 def extract_date_time(inp):
     date_patterns = [
-        r"(?:în\s+data\s+de|data|date|on)?\s*[:\-]?\s*(\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4})",
+        r"(?:în\s+data\s+de|in\s+data\s+de|data|date|on)?\s*[:\-]?\s*(\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4})",
         r"(?:on)?\s*(\d{1,2})\s+(ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie|January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{2,4})",
         r"(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{2,4})",
         r"(?:the\s*)?(\d{1,2})(?:st|nd|rd|th)?\s*(?:of\s+)?(January|February|March|April|May|June|July|August|September|October|November|December),?\s+(\d{2,4})"
@@ -87,84 +89,72 @@ def extract_date_time(inp):
     return extracted_date, extracted_time
 
 
-def extract_meeting_title(email_subject: str) -> str:
-    subject = email_subject.strip()
 
-    # 1. If "is back" or Romanian equivalent exists, cut before it
-    if re.search(r'\b(is back|revine|se întoarce)\b', subject, flags=re.IGNORECASE):
-        return re.split(r'\b(is back|revine|se întoarce)\b', subject, flags=re.IGNORECASE)[0].strip()
+def extract_meeting_title(subject: str) -> str:
+    subject = subject.strip()
 
-    # 1.5 If title is in quotes, extract it
-    match = re.search(r'["“”„](.+?)["“”]', subject)
-    if match:
-        return match.group(1).strip()
+    patterns = [
 
-    # 2. Handle Romanian: "Invitație: Title - date/time"
-    match = re.search(r'invita[țt]ie.*?[:\-]\s*([^-]+?)\s*-\s', subject, re.IGNORECASE)
-    if match:
-        subject = match.group(1).strip()
+        # Sunteti invitati la ....  /  Va invitam la ... / Invitatie ... / Invitatie la evenimentul ...
+        # eveniment/conferinta/festivitatea/intalnirea
 
-    # 3. Handle Romanian: "Invitație la evenimentul" or "Invitație eveniment"
-    elif re.search(r'invita[țt]ie\s+(la\s+)?eveniment(ul)?[:\-]?\s*(.+?)\s*-\s', subject, re.IGNORECASE):
-        subject = re.search(r'invita[țt]ie\s+(la\s+)?eveniment(ul)?[:\-]?\s*(.+?)\s*-\s', subject, re.IGNORECASE).group(3).strip()
+        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+[Ee]venimentul\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+[Cc]onferin[tț]a\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+[Ff]estivitatea\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
 
-    # 4. Handle Romanian: "Invitație | Title", "Invitație - Title", or "Invitație: Title"
-    elif re.search(r'invita[țt]ie\s*[\|\-:]\s*(.+)', subject, re.IGNORECASE):
-        subject = re.search(r'invita[țt]ie\s*[\|\-:]\s*(.+)', subject, re.IGNORECASE).group(1).strip()
+        r"[V][aă]\s+invit[ăa]m?\s+la\s+evenimentul\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[V][aă]\s+invit[ăa]m?\s+la\s+[Ff]estivitatea\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[V][aă]\s+invit[ăa]m?\s+la\s+[Cc]onferin[tț]a\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[V][aă]\s+invit[ăa]m?\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[V][aă]\s+invit[ăa]m?\s+la\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
 
-    # 4.1 Handle English: "Invitation | Title", "You're invited to - Title", etc.
-    elif re.search(r'(invitation|you\'?re invited)\s*(to\s+)?[\|\-:]\s*(.+)', subject, re.IGNORECASE):
-        subject = re.search(r'(invitation|you\'?re invited)\s*(to\s+)?[\|\-:]\s*(.+)', subject, re.IGNORECASE).group(3).strip()
+        r"[Ii]nvita[țt]ie\s+la\s+[Ee]venimentul\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvita[țt]ie\s+la\s+[Cc]onferin[tț]a\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvita[țt]ie\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvita[țt]ie\s+la\s+[Ff]estivitatea\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
 
-    # 4.2 Handle English: "You're invited to Event Name"
-    elif re.search(r'you\'?re invited to\s+(.+)', subject, re.IGNORECASE):
-        subject = re.search(r'you\'?re invited to\s+(.+)', subject, re.IGNORECASE).group(1).strip()
+        r"[Ii]nvita[țt]ie\s+la\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvita[țt]ie\s*[\|\-:@,]\s*(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d$)",
+        r"[Ii]nvita[țt]ie\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
 
-    # 4.3 Handle English: "Invitation to Event Name"
-    elif re.search(r'invitation to\s+(.+)', subject, re.IGNORECASE):
-        subject = re.search(r'invitation to\s+(.+)', subject, re.IGNORECASE).group(1).strip()
 
-    # 4.5 Handle Romanian: "Invitație Title" (no punctuation, fallback case)
-    elif re.search(r'\binvita[țt]ie\s+\w+', subject, re.IGNORECASE):
-        match = re.search(r'\binvita[țt]ie\s+([^\s\-:,]+)', subject, re.IGNORECASE)
+
+        # You are invited to the event ... / We invite you to ... / Invitation ... / Invitation at ...
+        # presentation/meeting/conference
+
+        r"[Yy](?:ou\s+are|ou're)\s+invited\s+to\s+the\s+[Ee]vent\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Yy](?:ou\s+are|ou're)\s+invited\s+to\s+the\s+[Cc]onference\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Yy](?:ou\s+are|ou're)\s+invited\s+to\s+the\s+[Pp]resentation\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Yy](?:ou\s+are|ou're)\s+invited\s+to\s+the\s+[Mm]eeting\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Yy](?:ou\s+are|ou're)\s+invited\s+(?:to|at)\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+
+        r"[Ww]e\s+invite\s+you\s+to\s+the\s+[Ee]vent\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Ww]e\s+invite\s+you\s+to\s+the\s+[Cc]onference\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Ww]e\s+invite\s+you\s+to\s+the\s+[Pp]resentation\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Ww]e\s+invite\s+you\s+to\s+the\s+[Mm]eeting\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Ww]e\s+invite\s+you\s+(?:to|at)\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+
+        r"[Ii]nvitation\s+to\s+the\s+[Ee]vent\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvitation\s+to\s+the\s+[Cc]onference\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvitation\s+to\s+the\s+[Pp]resentation\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvitation\s+to\s+the\s+[Mm]eeting\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvitation\s+(?:to|at)\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
+
+        r"[Ii]nvitation\s*[\|\-:@,]\s*(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvitation\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
+        r"(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)"
+
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, subject)
         if match:
-            subject = "Invitație " + match.group(1).strip()
-
-    # 5. Handle "Invitație", "Event", "Eveniment", or "Oportunitate|Opportunity - Title"
-    elif re.search(r'\b(invita[țt]ie|event|eveniment|oportunitate|opportunity)\b[^-]*-\s*(.+)', subject, re.IGNORECASE):
-        subject = re.search(r'\b(invita[țt]ie|event|eveniment|oportunitate|opportunity)\b[^-]*-\s*(.+)', subject, re.IGNORECASE).group(2).strip()
-
-    # 6. Handle English: "Event at Something - Title"
-    elif re.search(r'event\s+at\s+.*-\s*(.+)', subject, re.IGNORECASE):
-        subject = re.search(r'event\s+at\s+.*-\s*(.+)', subject, re.IGNORECASE).group(1).strip()
-
-    # 6.1 Handle Romanian: "Eveniment la Something - Title"
-    elif re.search(r'eveniment(ul)?\s+la\s+.*-\s*(.+)', subject, re.IGNORECASE):
-        subject = re.search(r'eveniment(ul)?\s+la\s+.*-\s*(.+)', subject, re.IGNORECASE).group(2).strip()
-
-    # 7. Handle "Event at Something" with no dash
-    elif re.search(r'event\s+at\s+(.+)', subject, re.IGNORECASE):
-        subject = re.search(r'event\s+at\s+(.+)', subject, re.IGNORECASE).group(1).strip()
-
-    # 8. Cut off "- date/time" formats
-    subject = re.split(
-        r'\s*-\s*(?=\d{1,2}\s+\w+|\d{1,2}[:.]\d{2}|ora\s*\d+|\d{1,2}[\./]\d{1,2}|\d{4})',
-        subject
-    )[0].strip()
-
-    # 9. Cut off ", date" or ", number" endings
-    subject = re.split(
-        r'\s*,\s*(?=\d{1,2}(\s+\w+)?|\d{4}|ora\s*\d+)',
-        subject
-    )[0].strip()
-
-    # 🔁 NEW: Remove trailing stuff like ", ..." or " - ..." if not handled above
-    subject = re.split(r'[\-,]\s+', subject)[0].strip()
-
-    # 10. Remove trailing digits if likely noise
-    subject = re.sub(r'[\s,]*(\d{1,2})$', '', subject).strip()
+            return match.group(1).strip()
 
     return subject
+
 
 
 def extract_meeting_location(text):
@@ -182,23 +172,22 @@ def extract_meeting_location(text):
     if re.search(r"\b(?:online)\b", text, re.IGNORECASE):
         return f"Online, Link: {link}" if link else "Online"
 
-    # Patterns for Romanian + English locations
     patterns = [
-        # Romanian
-        r"📍\s*(?:Loca[țt]ie[:\-]?\s*)?(.+)",
-        r"\bla\s+([A-Z][\w\s\-&,\.]+)",
-        r"\bîn\s+([A-Z][\w\s\-&,\.]+)",
-        r"\bse\s+(?:va\s+)?desf[aă]șura\s+(?:la|în)\s+([A-Z][\w\s\-&,\.]+)",
-        r"\b(?:va|are)\s+avea\s+loc\s+(?:la|în)?\s*([A-Z][\w\s\-&,\.]+)",
+        # Ro
+        r"📍\s*(?:[Ll]oca[țt]ie[:\-]?\s*)?(.+)",
+        r"\bla\s+([A-Z][\w\s\-&,]+)",
+        r"\bîn\s+([A-Z][\w\s\-&,]+)",
+        r"\bse\s+(?:va\s+)?desf[aă]șura\s+(?:la|în)\s+([A-Z][\w\s\-&,]+)",
+        r"\b(?:va|are)\s+avea\s+loc\s+(?:la|în)?\s*([A-Z][\w\s\-&,]+)",
 
-        # English
-        r"\bwill\s+take\s+place\s+(?:at|in)\s+([A-Z][\w\s\-&,\.]+)",
-        r"\btakes\s+place\s+(?:at|in)\s+([A-Z][\w\s\-&,\.]+)",
-        r"\bis\s+held\s+(?:at|in)\s+([A-Z][\w\s\-&,\.]+)",
-        r"\bwill\s+be\s+held\s+(?:at|in)\s+([A-Z][\w\s\-&,\.]+)",
-        r"\bwill\s+be\s+hosted\s+(?:at|in)\s+([A-Z][\w\s\-&,\.]+)",
-        r"\bwill\s+happen\s+(?:at|in)\s+([A-Z][\w\s\-&,\.]+)",
-        r"📍\s*(?:Location[:\-]?\s*)?([A-Z][\w\s\-&,\.]+)"
+        # En
+        r"\bwill\s+take\s+place\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
+        r"\btakes\s+place\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
+        r"\bis\s+held\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
+        r"\bwill\s+be\s+held\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
+        r"\bwill\s+be\s+hosted\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
+        r"\bwill\s+happen\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
+        r"📍\s*(?:Location[:\-]?\s*)?([A-Z][\w\s\-&,]+)"
     ]
 
     for pattern in patterns:
@@ -228,6 +217,9 @@ def process_information():
     email_id = data.get("Message_ID")
     email_body = data.get("message_body")
 
+    extracted_meeting_date, extracted_meeting_time = extract_date_time(email_body)
+    extracted_meeting_title = extract_meeting_title(email_subject)
+    extracted_meeting_location = extract_meeting_location(email_body)
 
     print(f"Subject: {email_subject}")
     print(f"From: {email_from}")
@@ -237,15 +229,10 @@ def process_information():
     print(f"Email ID: {email_id}")
     print(f"Body: {email_body}\n")
 
-
-    extracted_meeting_date, extracted_meeting_time = extract_date_time(email_body)
-    extracted_meeting_title = extract_meeting_title(email_subject)
-    extracted_meeting_location = extract_meeting_location(email_body)
-
-    print(f"⏰ Extracted meeting title: {extracted_meeting_title}")
-    print(f"⏰ Extracted meeting location: {extracted_meeting_location}")
-    print(f"📅 Extracted meeting date: {extracted_meeting_date}")
-    print(f"⏰ Extracted meeting time: {extracted_meeting_time}")
+    print(f"Extracted meeting title: {extracted_meeting_title}")
+    print(f"Extracted meeting location: {extracted_meeting_location}")
+    print(f"Extracted meeting date: {extracted_meeting_date}")
+    print(f"Extracted meeting time: {extracted_meeting_time}")
 
 
     return jsonify({"status": "received"}), 200
