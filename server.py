@@ -1,7 +1,10 @@
 import re
 from datetime import datetime
+import requests
 
 from flask import Flask, request, jsonify
+
+url = "http://localhost/Backend/Main/index.php"
 
 month_translations = {
     "ianuarie": "January",
@@ -98,26 +101,29 @@ def extract_meeting_title(subject: str) -> str:
         # Sunteti invitati la ....  /  Va invitam la ... / Invitatie ... / Invitatie la evenimentul ...
         # eveniment/conferinta/festivitatea/intalnirea
 
-        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+[Ee]venimentul\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
-        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+[Cc]onferin[tț]a\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
-        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
-        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+[Ff]estivitatea\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r'"([^"]+)"',
+        r'“([^”]+)”',
+        r'„([^”]+)”',
+        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+[Ee]venimentul\s+(.*?)(?:\s*[\-|,\\/]\s*|\s+\d|$)",
+        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+[Cc]onferin[tț]a\s+(.*?)(?:\s*[\-|,\\/]\s*|\s+\d|$)",
+        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[\-|,\\/]\s*|\s+\d|$)",
+        r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+[Ff]estivitatea\s+(.*?)(?:\s*[\-|,\\/]\s*|\s+\d|$)",
         r"[Ss]unte[țt]i invita[tț][ăai]?\s+la\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
 
-        r"[V][aă]\s+invit[ăa]m?\s+la\s+evenimentul\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
-        r"[V][aă]\s+invit[ăa]m?\s+la\s+[Ff]estivitatea\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
-        r"[V][aă]\s+invit[ăa]m?\s+la\s+[Cc]onferin[tț]a\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
-        r"[V][aă]\s+invit[ăa]m?\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
+        r"[V][aă]\s+invit[ăa]m?\s+la\s+evenimentul\s+(.*?)(?:\s*[\-|,\\/]\s*|\s+\d|$)",
+        r"[V][aă]\s+invit[ăa]m?\s+la\s+[Ff]estivitatea\s+(.*?)(?:\s*[\-|,\\/]\s*|\s+\d|$)",
+        r"[V][aă]\s+invit[ăa]m?\s+la\s+[Cc]onferin[tț]a\s+(.*?)(?:\s*[\-|,\\/]\s*|\s+\d|$)",
+        r"[V][aă]\s+invit[ăa]m?\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[\-|,\\/]\s*|\s+\d|$)",
         r"[V][aă]\s+invit[ăa]m?\s+la\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
 
-        r"[Ii]nvita[țt]ie\s+la\s+[Ee]venimentul\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
-        r"[Ii]nvita[țt]ie\s+la\s+[Cc]onferin[tț]a\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
-        r"[Ii]nvita[țt]ie\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
-        r"[Ii]nvita[țt]ie\s+la\s+[Ff]estivitatea\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvita[țt]ie\s+la\s+[Ee]venimentul\s+(.*?)(?:\s*[-|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvita[țt]ie\s+la\s+[Cc]onferin[tț]a\s+(.*?)(?:\s*[-|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvita[țt]ie\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[-|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvita[țt]ie\s+la\s+[Ff]estivitatea\s+(.*?)(?:\s*[-|,\\/]\s*|\s+\d|$)",
 
-        r"[Ii]nvita[țt]ie\s+la\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
-        r"[Ii]nvita[țt]ie\s*[\|\-:@,]\s*(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d$)",
-        r"[Ii]nvita[țt]ie\s+(.*?)(?:\s*[-:|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvita[țt]ie\s+la\s+(.*?)(?:\s*[-|,\\/]\s*|\s+\d|$)",
+        r"[Ii]nvita[țt]ie\s*[\|\-:@,]\s*(.*?)(?:\s*[\-|,\\/]\s*|\s+\d$)",
+        r"[Ii]nvita[țt]ie\s+(.*?)(?:\s*[-|,\\/]\s*|\s+\d|$)",
 
 
 
@@ -174,11 +180,12 @@ def extract_meeting_location(text):
 
     patterns = [
         # Ro
-        r"📍\s*(?:[Ll]oca[țt]ie[:\-]?\s*)?(.+)",
-        r"\bla\s+([A-Z][\w\s\-&,]+)",
-        r"\bîn\s+([A-Z][\w\s\-&,]+)",
+        r"📍\s*(?:Loca[țt]ie[:\-]?\s*)?(.+)",
         r"\bse\s+(?:va\s+)?desf[aă]șura\s+(?:la|în)\s+([A-Z][\w\s\-&,]+)",
         r"\b(?:va|are)\s+avea\s+loc\s+(?:la|în)?\s*([A-Z][\w\s\-&,]+)",
+        r"\bla\s+([A-Z][\w\s\-&,]+)",
+        r"\bîn\s+([A-Z][\w\s\-&,]+)",
+
 
         # En
         r"\bwill\s+take\s+place\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
@@ -233,6 +240,28 @@ def process_information():
     print(f"Extracted meeting location: {extracted_meeting_location}")
     print(f"Extracted meeting date: {extracted_meeting_date}")
     print(f"Extracted meeting time: {extracted_meeting_time}")
+
+    data = {
+        'subject': email_subject,
+        'from': email_from,
+        'cc': email_cc,
+        'bcc': email_bcc,
+        'email_date': email_date,
+        'email_id': email_id,
+        'body': email_body,
+        'extracted_meeting_title': extracted_meeting_title,
+        'extracted_meeting_location': extracted_meeting_location,
+        'extracted_meeting_date': extracted_meeting_date,
+        'extracted_meeting_time': extracted_meeting_time
+    }
+
+    response = requests.post(url, data=data)
+
+    if response.status_code == 200:
+        print("Request-ul a fost trimis cu succes!")
+        print(response.text)
+    else:
+        print(f"Eroare la trimiterea request-ului: {response.status_code}")
 
 
     return jsonify({"status": "received"}), 200
