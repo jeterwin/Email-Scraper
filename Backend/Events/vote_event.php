@@ -12,7 +12,6 @@ $user_id = $_SESSION['user_id'];
 $event_id = $_POST['event_id'];
 $interested = $_POST['interested'];
 
-// Verifică dacă evenimentul e în viitor
 $stmt = $conn->prepare("SELECT meeting_day FROM scrape_results WHERE message_id = ?");
 $stmt->bind_param("i", $event_id);
 $stmt->execute();
@@ -25,7 +24,6 @@ if (strtotime($event_day) < strtotime(date("Y-m-d"))) {
     exit();
 }
 
-// Înregistrează votul (sau îl actualizează)
 $stmt = $conn->prepare("INSERT INTO event_votes(user_id, event_id, interested) VALUES (?, ?, ?)
                         ON DUPLICATE KEY UPDATE interested = ?");
 $stmt->bind_param("iiii", $user_id, $event_id, $interested, $interested);

@@ -11,8 +11,10 @@ function register_user($conn, $username, $password, $email, $role)
         echo "Invalid email address!";
         return false;
     }
-    # Username length < 20
-    if (strlen($username) > 20) {
+
+    $username_length = strlen($username);
+    # Username length must be between [7, 20]
+    if ($username_length > 20 || $username_length < 6) {
         echo "Your username must not not exceed 20 characters.";
         return false;
         # Email length < 40
@@ -59,13 +61,12 @@ function register_user($conn, $username, $password, $email, $role)
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    if ($_POST["username"] != "" && $_POST["password"] != "" && $_POST["email"] != "" && $_POST["role"] != "") {
+    if ($_POST["username"] != "" && $_POST["password"] != "" && $_POST["email"] != "") {
         $username = $_POST["username"];
         $password = $_POST["password"];
         $email = $_POST["email"];
-        $role = $_POST["role"];
 
-        if (register_user($conn, $username, $password, $email, $role)) {
+        if (register_user($conn, $username, $password, $email, 'user')) {
             echo "Registered new user";
         } else {
             echo "Could not register user";
