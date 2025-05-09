@@ -2,7 +2,7 @@
 require_once '../Auth/auth.php';
 require_once '../Auth/Database/db.php';
 
-$requiredFields = ['message_id', 'sender', 'subject', 'send_date', 'meeting_title', 'meeting_location', 'meeting_time', 'meeting_day', 'cc'];
+$requiredFields = ['message_id', 'sender', 'subject', 'send_date', 'meeting_title', 'meeting_location', 'meeting_time', 'meeting_day', 'cc', 'bcc'];
 foreach ($requiredFields as $field) {
     if (!isset($_POST[$field])) {
         http_response_code(400);
@@ -20,6 +20,7 @@ $meeting_location = $_POST['meeting_location'];
 $meeting_time     = $_POST['meeting_time'];
 $meeting_day      = $_POST['meeting_day'];
 $cc               = $_POST['cc'];
+$bcc              = $_POST['bcc'];
 
 if (!DateTime::createFromFormat('Y-m-d', $send_date)) {
     http_response_code(400);
@@ -27,15 +28,15 @@ if (!DateTime::createFromFormat('Y-m-d', $send_date)) {
     exit;
 }
 
-$stmt = $conn->prepare("INSERT INTO scrape_results (message_id, sender, subject, send_date, meeting_title, meeting_location, meeting_time, meeting_day, cc)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$stmt = $conn->prepare("INSERT INTO scrape_results (message_id, sender, subject, send_date, meeting_title, meeting_location, meeting_time, meeting_day, cc, bcc)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 if (!$stmt) {
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => 'Failed to prepare statement.']);
     exit;
 }
 
-$stmt->bind_param("sssssssss", $message_id, $sender, $subject, $send_date, $meeting_title, $meeting_location, $meeting_time, $meeting_day, $cc);
+$stmt->bind_param("ssssssssss", $message_id, $sender, $subject, $send_date, $meeting_title, $meeting_location, $meeting_time, $meeting_day, $cc, $bcc);
 
 if ($stmt->execute()) {
     echo json_encode(['status' => 'success', 'message' => 'Record inserted successfully.']);
