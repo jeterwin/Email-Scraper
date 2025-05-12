@@ -2,9 +2,21 @@ import re
 from datetime import datetime
 import requests
 
+session = requests.Session()
+
+login_url = "http://localhost/Backend/Auth/login.php"
+login_data = {
+    "username": "alexia",
+    "password": "111"
+}
+
+login_response = session.post(login_url, data=login_data)
+print("Login:", login_response.status_code)
+
+
 from flask import Flask, request, jsonify
 
-url = "http://localhost/Backend/Main/index.php"
+url = "http://localhost/Backend/Events/insert_email_data.php"
 
 month_translations = {
     "ianuarie": "January",
@@ -21,7 +33,16 @@ month_translations = {
     "decembrie": "December"
 }
 
-# HH:MM
+# for the received email date (only date, without time)
+def extract_just_date(iso_datetime_str):
+    try:
+        dt = datetime.fromisoformat(iso_datetime_str.replace("Z", "+00:00"))
+        return dt.strftime("%Y-%m-%d")
+    except ValueError:
+        return None
+
+
+# DD.MM.YYYY
 def convert_date(date_str):
     try:
         for ro, en in month_translations.items():
@@ -41,7 +62,26 @@ def convert_date(date_str):
     return None
 
 
-# DD.MM.YYYY
+# temporary change of date format to YYYY-MM-DD
+def convert_date_temporary(date_str):
+    try:
+        for ro, en in month_translations.items():
+            if ro in date_str.lower():
+                date_str = re.sub(ro, en, date_str, flags=re.IGNORECASE)
+                break
+
+        for fmt in ("%d/%m/%Y", "%d.%m.%Y", "%d-%m-%Y", "%d/%m/%y", "%d.%m.%y", "%d-%m-%y",
+                    "%d %B %Y", "%d %B, %Y", "%B %d, %Y", "%B %d %Y"):
+            try:
+                dt = datetime.strptime(date_str.strip(), fmt)
+                return dt.strftime("%Y-%m-%d")
+            except ValueError:
+                continue
+    except:
+        pass
+    return None
+
+# HH:MM
 def convert_time(time_str):
     try:
         return datetime.strptime(time_str.strip(), "%I:%M %p").strftime("%H:%M")
@@ -72,9 +112,9 @@ def extract_date_time(inp):
         if match:
             groups = match.groups()
             if len(groups) == 1:
-                extracted_date = convert_date(groups[0])
+                extracted_date = convert_date_temporary(groups[0])
             elif len(groups) == 3:
-                extracted_date = convert_date(f"{groups[0]} {groups[1]} {groups[2]}")
+                extracted_date = convert_date_temporary(f"{groups[0]} {groups[1]} {groups[2]}")
             break
 
     # Extract time
@@ -179,22 +219,26 @@ def extract_meeting_location(text):
         return f"Online, Link: {link}" if link else "Online"
 
     patterns = [
-        # Ro
-        r"📍\s*(?:Loca[țt]ie[:\-]?\s*)?(.+)",
-        r"\bse\s+(?:va\s+)?desf[aă]șura\s+(?:la|în)\s+([A-Z][\w\s\-&,]+)",
-        r"\b(?:va|are)\s+avea\s+loc\s+(?:la|în)?\s*([A-Z][\w\s\-&,]+)",
-        r"\bla\s+([A-Z][\w\s\-&,]+)",
-        r"\bîn\s+([A-Z][\w\s\-&,]+)",
 
+        r"📍\s*(?:[Ll]oca[țt]i[ae][:\-]?\s*)?([A-Z][^.,\n]+)",
+        r"📍\s*(?:Location[:\-]?\s*)?([A-Z][^.,\n]+)",
+        r"[Ll]oca[țt]i[ae][:\-]?\s*?([A-Z][^.,\n]+)",
 
-        # En
-        r"\bwill\s+take\s+place\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
-        r"\btakes\s+place\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
-        r"\bis\s+held\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
-        r"\bwill\s+be\s+held\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
-        r"\bwill\s+be\s+hosted\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
-        r"\bwill\s+happen\s+(?:at|in)\s+([A-Z][\w\s\-&,]+)",
-        r"📍\s*(?:Location[:\-]?\s*)?([A-Z][\w\s\-&,]+)"
+        r"\b[Ss]e\s+(?:va\s+)?desf[aă][șs]ura\s+(?:la|în)\s+([A-Z][^.,\n]+)",
+        r"\b(?:[Vv]a\s+avea|[Aa]re)\s+loc\s+(?:la|în)?\s*([A-Z][^.,\n]+)",
+        r"\bva\s+avea\s+loc\s+în\s+perioada\s+\d{1,2}-\d{1,2}\s+\w+\s+\d{4},?\s+în\s+([A-Za-zȘșȚțĂăÂâÎî\- ]+)",
+
+        r"\bwill\s+take\s+place\s+during\s+the\s+period\s+\d{1,2}-\d{1,2}\s+\w+\s+\d{4},?\s+in\s+([A-Za-zȘșȚțĂăÂâÎî\- ]+)",
+        r"\bwill\s+take\s+place\s+(?:at|in)\s+(?:the)\s+([A-Z][^.,\n]+)",
+        r"\btakes\s+place\s+(?:at|in)\s+(?:the)\s+([A-Z][^.,\n]+)",
+        r"\bis\s+held\s+(?:at|in)\s+(?:the)\s+([A-Z][^.,\n]+)",
+        r"\bwill\s+be\s+held\s+(?:at|in)\s+(?:the)\s+([A-Z][^.,\n]+)",
+        r"\bwill\s+be\s+hosted\s+(?:at|in)\s+(?:the)\s+([A-Z][^.,\n]+)",
+        r"\bwill\s+happen\s+(?:at|in)\s+(?:the)\s+([A-Z][^.,\n]+)",
+        r"\bhappens\s+(?:at|in)\s+(?:the)\s+([A-Z][^.,\n]+)",
+
+        r"\bla\s+([A-Z][^.,\n]+)",
+        r"\bîn\s+([A-Z][^.,\n]+)",
     ]
 
     for pattern in patterns:
@@ -204,7 +248,7 @@ def extract_meeting_location(text):
             locatie = re.sub(r"[\.!\n,;]+$", "", locatie)
             return locatie
 
-    return "Locație necunoscută"
+    return None
 
 
 
@@ -221,6 +265,7 @@ def process_information():
     email_cc = data.get("email_cc")
     email_bcc = data.get("email_bcc")
     email_date = data.get("email_date")
+    email_date = extract_just_date(email_date)
     email_id = data.get("Message_ID")
     email_body = data.get("message_body")
 
@@ -241,28 +286,23 @@ def process_information():
     print(f"Extracted meeting date: {extracted_meeting_date}")
     print(f"Extracted meeting time: {extracted_meeting_time}")
 
+    insert_url = "http://localhost/Backend/Events/insert_email_data.php"
     data = {
+        'message_id': email_id,
+        'sender': email_from,
         'subject': email_subject,
-        'from': email_from,
+        'send_date': email_date,
+        'meeting_title': email_subject,
+        'meeting_location': extracted_meeting_location,
+        'meeting_time': extracted_meeting_time,
+        'meeting_day': extracted_meeting_date,
         'cc': email_cc,
-        'bcc': email_bcc,
-        'email_date': email_date,
-        'email_id': email_id,
-        'body': email_body,
-        'extracted_meeting_title': extracted_meeting_title,
-        'extracted_meeting_location': extracted_meeting_location,
-        'extracted_meeting_date': extracted_meeting_date,
-        'extracted_meeting_time': extracted_meeting_time
+        'bcc': email_bcc
     }
 
-    response = requests.post(url, data=data)
-
-    if response.status_code == 200:
-        print("Request-ul a fost trimis cu succes!")
-        print(response.text)
-    else:
-        print(f"Eroare la trimiterea request-ului: {response.status_code}")
-
+    response = session.post(insert_url, data=data)
+    print("Insert:", response.status_code)
+    print(response.text)
 
     return jsonify({"status": "received"}), 200
 
