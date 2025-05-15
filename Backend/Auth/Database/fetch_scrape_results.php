@@ -1,4 +1,8 @@
 <?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST');
+header('Access-Control-Allow-Headers: Content-Type');
+
 require_once 'db.php';
 
 $sortBy = isset($_GET['sortBy']) ? $_GET['sortBy'] : 'meeting_time';
@@ -11,39 +15,28 @@ if (!in_array($sortBy, $allowedSort)) {
 $query = "SELECT * FROM scrape_results ORDER BY $sortBy DESC";
 $result = $conn->query($query);
 
-if ($result->num_rows > 0) {
-    echo "<table>
-            <tr>
-                <th>Message ID</th>
-                <th>Sender</th>
-                <th>Subject</th>
-                <th>Send Date</th>
-                <th>Meeting Title</th>
-                <th>Location</th>
-                <th>Time</th>
-                <th>Day</th>
-                <th>CC</th>
-                <th>Interested</th>
-            </tr>";
+$data = [];
 
+if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        $interestedClass = $row['interested'] ? "highlight" : "";
-        echo "<tr class='$interestedClass'>
-                <td>{$row['message_id']}</td>
-                <td>{$row['sender']}</td>
-                <td>{$row['subject']}</td>
-                <td>{$row['send_date']}</td>
-                <td>{$row['meeting_title']}</td>
-                <td>{$row['meeting_location']}</td>
-                <td>{$row['meeting_time']}</td>
-                <td>{$row['meeting_day']}</td>
-                <td>{$row['cc']}</td>
-                <td>" . ($row['interested'] ? "✔ Yes" : "✖ No") . "</td>
-            </tr>";
+        // Provide default values if some fields are missing
+        $data[] = [
+            'message_ID' => isset($row['message_ID']) ? $row['message_ID'] : null,
+            'sender' => isset($row['sender']) ? $row['sender'] : 'N/A', // You can change the default value as needed
+            'subject' => isset($row['subject']) ? $row['subject'] : 'No subject',
+            'send_date' => isset($row['send_date']) ? $row['send_date'] : 'N/A', // Change default as needed
+            'meeting_title' => isset($row['meeting_title']) ? $row['meeting_title'] : 'No title',
+            'meeting_location' => isset($row['meeting_location']) ? $row['meeting_location'] : 'No location',
+            'meeting_time' => isset($row['meeting_time']) ? $row['meeting_time'] : 'N/A', // Change default as needed
+            'meeting_date' => isset($row['meeting_date']) ? $row['meeting_date'] : 'N/A', // Change default as needed
+            'cc' => !empty($row['cc']) ? $row['cc'] : 'No CC', // Change default as needed
+            'interested' => isset($row['interested']) ? $row['interested'] : false // Default null if no value
+        ];
     }
-    echo "</table>";
+    header('Content-Type: application/json');
+    echo json_encode($data);
 } else {
-    echo "<p>No meetings found.</p>";
+    echo json_encode(['message' => 'No meetings found.']);
 }
 
 $conn->close();

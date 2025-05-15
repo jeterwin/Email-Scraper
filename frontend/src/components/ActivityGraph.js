@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
     Box,
     Card,
@@ -7,14 +7,7 @@ import {
     Stack,
 } from "@mui/material";
 import Chart from "react-apexcharts";
-
-// Sample chart data
-const barChartDataDailyTraffic = [
-    {
-        name: "Mails",
-        data: [7, 5, 10, 8, 12, 5, 3],
-    },
-];
+import axios from "axios";
 
 const barChartOptionsDailyTraffic = {
     chart: {
@@ -24,7 +17,7 @@ const barChartOptionsDailyTraffic = {
         background: '#F6F6F6',
     },
     xaxis: {
-        categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
+        categories: [],
         labels: {
             style: {
                 colors: "#888",
@@ -45,7 +38,7 @@ const barChartOptionsDailyTraffic = {
     stroke: {
         show: true,
         width: 2,
-        color: "#012815",
+        color: '#012815',
     },
     grid: {
         show: true,
@@ -53,6 +46,56 @@ const barChartOptionsDailyTraffic = {
 };
 
 export default function ActivityGraph(props) {
+    const [categories, setCategories] = useState([]);
+    const [emailCounts, setEmailCounts] = useState([]);
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const response = await axios.get('http://localhost/email_scraper/Backend/Auth/Database/fetch_scrape_results.php');
+                const mappedData = response.data.map(item => ({
+                    sendDate: item.send_date,
+                }));
+                const monthlyData = processCount(mappedData);
+                const months = Object.keys(monthlyData);
+                const counts = Object.values(monthlyData);
+
+                setCategories(months);
+                setEmailCounts(counts);
+
+            } catch (error) {
+                console.error('Failed to fetch data: ', error);
+            }
+        }
+
+        fetchData();
+    }, []);
+
+
+    const processCount = (data) => {
+        const monthlyCounts = {};
+        data.forEach((item) => {
+            const date = new Date(item.sendDate);
+            const dateString = date.toString();
+            const month = dateString.split(' ')[1];
+
+            if (monthlyCounts[month]) {
+                monthlyCounts[month]++;
+            } else {
+                monthlyCounts[month] = 1;
+            }
+        });
+
+        return monthlyCounts;
+    }
+
+    const barChartDataDailyTraffic = [
+        {
+            name: "Mails",
+            data: emailCounts,
+        }
+    ]
+
     return (
         <Card sx={{
             width: "47%",
@@ -85,7 +128,12 @@ export default function ActivityGraph(props) {
                     p: 1,
                 }}>
                     <Chart
-                        options={barChartOptionsDailyTraffic}
+                        options={{
+                            ...barChartOptionsDailyTraffic,
+                            xaxis: {
+                                categories,
+                            },
+                        }}
                         series={barChartDataDailyTraffic}
                         type="bar"
                         height="100%"

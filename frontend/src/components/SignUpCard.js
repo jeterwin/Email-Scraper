@@ -36,17 +36,40 @@ export default function SignUpCard() {
     const [showPassword, setShowPassword] = React.useState(false);
     const navigate = useNavigate();
 
-    const handleSubmit = (event) => {
-        if (nameError || emailError || passwordError) {
-            event.preventDefault();
-            return;
-        }
+    const handleSubmit = async(event) => {
+        event.preventDefault();
+
+        if (!validateInputs()) return;
+
         const data = new FormData(event.currentTarget);
-        console.log({
-            name: data.get('name'),
+        const payload = new URLSearchParams({
+            username: data.get('name'),
             email: data.get('email'),
             password: data.get('password'),
         });
+
+        try {
+            const response = await fetch('http://localhost/email_scraper/Backend/Auth/signup.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: payload,
+            });
+            const result = await response.text();
+
+            if (result.includes('Registered')) {
+                const username = String(data.get('name'));
+                localStorage.setItem('username', username);
+                navigate('/dashboard');
+            } else {
+                alert(result);
+            }
+        } catch (error) {
+            console.error('Login error', error);
+            alert('An error occurred. Please try again.');
+        }
+
     };
 
     const handleTogglePassword = () => {
@@ -58,31 +81,35 @@ export default function SignUpCard() {
         const email = document.getElementById('email');
         const password = document.getElementById('password');
 
-
         let isValid = true;
 
-        if (!name.value){
+        if (!name.value || name.value.includes(' ')){
             setNameError(true);
-            setNameErrorMessage('Please enter your name');
+            setNameErrorMessage(!name.value ? 'Please enter your username.' : 'Username cannot contain spaces.');
             isValid = false;
         } else {
             setNameError(false);
             setNameErrorMessage('');
         }
 
-        if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
+        if (!email.value || !/\S+@\S+\.\S+/.test(email.value) || email.value.includes(' ')) {
             setEmailError(true);
-            setEmailErrorMessage('Please enter a valid email address.');
+            setEmailErrorMessage(!email.value ? 'Please enter a valid email address.' : 'Email cannot contain spaces.');
             isValid = false;
         } else {
             setEmailError(false);
             setEmailErrorMessage('');
         }
 
-        if (!password.value || password.value.length < 6) {
+        if (!password.value || password.value.length < 6 || password.value.includes(' ')) {
             setPasswordError(true);
-            setPasswordErrorMessage('Password must be at least 6 characters long.');
-            isValid = false;
+            if (!password.value) {
+                setPasswordErrorMessage('Please enter a password.');
+            } else if (password.value.length < 6) {
+                setPasswordErrorMessage('Password must be at least 6 characters long.');
+            } else {
+                setPasswordErrorMessage('Password cannot contain spaces.');
+            }isValid = false;
         } else {
             setPasswordError(false);
             setPasswordErrorMessage('');
@@ -114,14 +141,14 @@ export default function SignUpCard() {
                 sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2 }}
             >
                 <FormControl>
-                    <FormLabel htmlFor="name">Name</FormLabel>
+                    <FormLabel htmlFor="name">Username</FormLabel>
                     <TextField
                         error={nameError}
                         helperText={nameErrorMessage}
                         id="name"
                         type="text"
                         name="name"
-                        placeholder="Enter your name"
+                        placeholder="Enter your username"
                         autoFocus
                         required
                         fullWidth
@@ -138,7 +165,6 @@ export default function SignUpCard() {
                         name="email"
                         placeholder="your@email.com"
                         autoComplete="email"
-                        autoFocus
                         required
                         fullWidth
                         variant="outlined"
@@ -155,7 +181,6 @@ export default function SignUpCard() {
                         type={showPassword ? 'text' : 'password'}
                         id="password"
                         autoComplete="current-password"
-                        autoFocus
                         required
                         fullWidth
                         variant="outlined"
@@ -184,7 +209,7 @@ export default function SignUpCard() {
                                 fontFamily: 'Arial',
                                 fontSize: '14px',
                                 textDecoration: 'none',
-                                color: 'inherit',
+                                color: 'blue',
                                 '&:hover': {
                                     textDecoration: 'underline',
                                 },
@@ -198,11 +223,6 @@ export default function SignUpCard() {
                     type="submit"
                     fullWidth
                     variant="contained"
-                    onClick={() => {
-                        if (validateInputs()) {
-                            navigate('/dashboard');
-                        }
-                    }}
                     sx={{
                         textTransform: 'none',
                         height: '7vh',
