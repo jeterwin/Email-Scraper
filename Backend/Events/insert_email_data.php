@@ -2,7 +2,7 @@
 require_once '../Auth/auth.php';
 require_once '../Auth/Database/db.php';
 
-$requiredFields = ['message_id', 'sender', 'subject', 'send_date', 'meeting_title', 'meeting_location', 'meeting_time', 'meeting_day', 'cc', 'bcc'];
+$requiredFields = ['message_id', 'sender', 'subject', 'send_date', 'meeting_title', 'meeting_location', 'meeting_time', 'cc', 'bcc'];
 foreach ($requiredFields as $field) {
     if (!isset($_POST[$field])) {
         http_response_code(400);
@@ -14,11 +14,10 @@ foreach ($requiredFields as $field) {
 $message_id       = $_POST['message_id'];
 $sender           = $_POST['sender'];
 $subject          = $_POST['subject'];
-$send_date        = $_POST['send_date']; // should be in 'YYYY-MM-DD' format, debatable, we will see
+$send_date        = $_POST['send_date']; // Expected: YYYY-MM-DD
 $meeting_title    = $_POST['meeting_title'];
 $meeting_location = $_POST['meeting_location'];
 $meeting_time     = $_POST['meeting_time'];
-$meeting_day      = $_POST['meeting_day'];
 $cc               = $_POST['cc'];
 $bcc              = $_POST['bcc'];
 
@@ -28,15 +27,26 @@ if (!DateTime::createFromFormat('Y-m-d', $send_date)) {
     exit;
 }
 
-$stmt = $conn->prepare("INSERT INTO scrape_results (message_id, sender, subject, send_date, meeting_title, meeting_location, meeting_time, meeting_day, cc, bcc)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$datetime_string = $send_date . ' ' . $meeting_time;
+$meeting_datetime = DateTime::createFromFormat('Y-m-d H:i', $datetime_string);
+
+if (!$meeting_datetime) {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid date/time combination for meeting_datetime. Expected format: YYYY-MM-DD HH:MM']);
+    exit;
+}
+
+$meeting_datetime_formatted = $meeting_datetime->format('Y-m-d H:i:s');
+
+$stmt = $conn->prepare("INSERT INTO scrape_results (message_id, sender, subject, send_date, meeting_title, meeting_location, meeting_time, cc, bcc)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 if (!$stmt) {
     http_response_code(500);
     echo json_encode(['status' => 'error', 'message' => 'Failed to prepare statement.']);
     exit;
 }
 
-$stmt->bind_param("ssssssssss", $message_id, $sender, $subject, $send_date, $meeting_title, $meeting_location, $meeting_time, $meeting_day, $cc, $bcc);
+$stmt->bind_param("sssssssss", $message_id, $sender, $subject, $send_date, $meeting_title, $meeting_location, $meeting_datetime_formatted, $cc, $bcc);
 
 if ($stmt->execute()) {
     echo json_encode(['status' => 'success', 'message' => 'Record inserted successfully.']);

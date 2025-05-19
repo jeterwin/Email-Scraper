@@ -2,11 +2,14 @@
 session_start();
 include '../Auth/Database/db.php';
 
-$today = date("Y-m-d");
+$stmt = $conn->prepare("SELECT * FROM scrape_results ORDER BY meeting_time ASC");
 
-// GOTTA CHANGE MEETING_DAY LATER
-$stmt = $conn->prepare("SELECT * FROM scrape_results WHERE meeting_day >= ? ORDER BY meeting_day ASC");
-$stmt->bind_param("s", $today);
+if (!$stmt) {
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => 'Failed to prepare statement.']);
+    exit;
+}
+
 $stmt->execute();
 $result = $stmt->get_result();
 
