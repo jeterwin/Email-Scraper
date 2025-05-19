@@ -2,7 +2,7 @@
 require_once '../Auth/auth.php';
 require_once '../Auth/Database/db.php';
 
-$requiredFields = ['message_id', 'sender', 'subject', 'send_date', 'meeting_title', 'meeting_location', 'meeting_time', 'cc', 'bcc'];
+$requiredFields = ['message_id', 'sender', 'subject', 'send_date', 'meeting_title', 'meeting_location', 'meeting_time'];
 foreach ($requiredFields as $field) {
     if (!isset($_POST[$field])) {
         http_response_code(400);
