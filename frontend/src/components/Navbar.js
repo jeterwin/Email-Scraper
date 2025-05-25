@@ -24,6 +24,15 @@ function Navbar(props) {
 }
 
 export default function ElevateAppBar(props) {
+    const [username, setUsername] = React.useState('');
+
+    React.useEffect(() => {
+        const storedUsername = localStorage.getItem('username');
+        if (storedUsername) {
+            setUsername(storedUsername);
+        }
+    }, []);
+
     return (
         <React.Fragment>
             <CssBaseline />
@@ -34,7 +43,7 @@ export default function ElevateAppBar(props) {
                             <Typography variant="h4" component="div" sx={{ color: 'black', fontWeight: 'bold', marginRight: '0.5rem' }}>
                                 👋 Hello,{' '}
                                 <Box component="span" sx={{ color: '#4B9460', fontWeight: 'bold' }}>
-                                    Miruna
+                                    {username}
                                 </Box>
                                 !
                             </Typography>

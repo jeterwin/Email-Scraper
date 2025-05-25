@@ -1,5 +1,11 @@
 <?php
-include './Database/db.php';
+
+header("Access-Control-Allow-Origin: http://localhost:3000");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+
+include 'Database/db.php';
 
 function register_user($conn, $username, $password, $email, $role)
 {
@@ -23,7 +29,6 @@ function register_user($conn, $username, $password, $email, $role)
         return false;
     }
 
-    # Check if the username / email have entries already
     $stmt = $conn->prepare("SELECT username, email FROM users WHERE username = ? OR email = ?");
     $stmt->bind_param("ss", $username, $email);
     $stmt->execute();
@@ -51,14 +56,15 @@ function register_user($conn, $username, $password, $email, $role)
 
 
     if ($success) {
-        echo "User registered successfully!";
+        echo "User registered successfully!\n";
     } else {
-        echo "Something failed";
+        echo "Something failed\n";
     }
 
     $stmt->close();
     return $success;
 }
+
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($_POST["username"] != "" && $_POST["password"] != "" && $_POST["email"] != "") {
@@ -67,11 +73,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $email = $_POST["email"];
 
         if (register_user($conn, $username, $password, $email, 'user')) {
-            echo "Registered new user";
+            echo "Registered new user\n";
         } else {
-            echo "Could not register user";
+            echo "Could not register user\n";
         }
     } else {
-        echo "Username, password or email fields not filled.";
+        echo "Username, password or email fields not filled.\n";
     }
 }

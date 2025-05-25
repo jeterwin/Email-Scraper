@@ -1,6 +1,12 @@
 <?php
+
+header("Access-Control-Allow-Origin: http://localhost:3000");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+
 session_start();
-include './Database/db.php';
+include 'Database/db.php';
 
 function login_user($conn, $username, $password)
 {
@@ -23,28 +29,23 @@ function login_user($conn, $username, $password)
             $_SESSION['username'] = $username;
             $_SESSION['user_role'] = $role;
 
-            echo "Succesfully logged in!";
-
-            # If the signed in person's role is admin, go to admin dashboard, otherwise go to user dashboard
-            header($_SESSION['user_role'] === "Admin" ? "Location: admin.php" : "Location: user.php");
-            exit();
+            return "Successfully logged in!";
         } else {
-            echo "The password you provided is not correct";
+            return "The password you provided is not correct";
         }
     } else {
-        echo "No user found with that username";
+        return "No user found with that username";
     }
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     # isset verifies empty string as well, so check if the string is actually empty.
-    if ($_POST["username"] != "" && $_POST["password"] != "") {
+    if (!empty($_POST["username"]) && !empty($_POST["password"])) {
         $username = $_POST["username"];
         $password = $_POST["password"];
 
-        if (login_user($conn, $username, $password)) {
-            echo "Successfully logged in!";
-        }
+        $message = login_user($conn, $username, $password);
+        echo $message;
     } else {
         echo "Username or password not filled.";
     }

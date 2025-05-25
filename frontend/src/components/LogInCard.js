@@ -27,23 +27,46 @@ const Card = styled(MuiCard)(({ theme }) => ({
 }));
 
 export default function LogInCard() {
-    const [emailError, setEmailError] = React.useState(false);
-    const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
+    const [nameError, setNameError] = React.useState(false);
+    const [nameErrorMessage, setNameErrorMessage] = React.useState('');
     const [passwordError, setPasswordError] = React.useState(false);
     const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
     const [showPassword, setShowPassword] = React.useState(false);
     const navigate = useNavigate();
 
-    const handleSubmit = (event) => {
-        if (emailError || passwordError) {
-            event.preventDefault();
-            return;
-        }
+    const handleSubmit = async(event) => {
+        event.preventDefault();
+
+        if (!validateInputs()) return;
+
         const data = new FormData(event.currentTarget);
-        console.log({
-            email: data.get('email'),
+        const payload = new URLSearchParams({
+            username: data.get('name'),
             password: data.get('password'),
         });
+
+        try {
+            const response = await fetch('http://localhost/email_scraper/Backend/Auth/login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: payload,
+                credentials: 'include',
+            });
+            const result = await response.text();
+
+            if (result.includes("Successfully logged in!")) {
+                const username = String(data.get('name'));
+                localStorage.setItem('username', username);
+                navigate('/dashboard');
+            } else {
+                alert(result);
+            }
+        } catch (error) {
+            console.error('Login error', error);
+            alert('An error occurred. Please try again.');
+        }
     };
 
     const handleTogglePassword = () => {
@@ -51,24 +74,29 @@ export default function LogInCard() {
     }
 
     const validateInputs = () => {
-        const email = document.getElementById('email');
+        const name = document.getElementById('name');
         const password = document.getElementById('password');
 
         let isValid = true;
 
-        if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-            setEmailError(true);
-            setEmailErrorMessage('Please enter a valid email address.');
+        if (!name.value || name.value.includes(' ')){
+            setNameError(true);
+            setNameErrorMessage(!name.value ? 'Please enter your username.' : 'Username cannot contain spaces.');
             isValid = false;
         } else {
-            setEmailError(false);
-            setEmailErrorMessage('');
+            setNameError(false);
+            setNameErrorMessage('');
         }
 
-        if (!password.value || password.value.length < 6) {
+        if (!password.value || password.value.length < 6 || password.value.includes(' ')) {
             setPasswordError(true);
-            setPasswordErrorMessage('Password must be at least 6 characters long.');
-            isValid = false;
+            if (!password.value) {
+                setPasswordErrorMessage('Please enter a password.');
+            } else if (password.value.length < 6) {
+                setPasswordErrorMessage('Password must be at least 6 characters long.');
+            } else {
+                setPasswordErrorMessage('Password cannot contain spaces.');
+            }isValid = false;
         } else {
             setPasswordError(false);
             setPasswordErrorMessage('');
@@ -100,20 +128,18 @@ export default function LogInCard() {
                 sx={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 2 }}
             >
                 <FormControl>
-                    <FormLabel htmlFor="email">Email</FormLabel>
+                    <FormLabel htmlFor="name">Username</FormLabel>
                     <TextField
-                        error={emailError}
-                        helperText={emailErrorMessage}
-                        id="email"
-                        type="email"
-                        name="email"
-                        placeholder="your@email.com"
-                        autoComplete="email"
+                        error={nameError}
+                        helperText={nameErrorMessage}
+                        id="name"
+                        type="text"
+                        name="name"
+                        placeholder="Enter your username"
                         autoFocus
                         required
                         fullWidth
-                        variant="outlined"
-                        color={emailError ? 'error' : 'primary'}
+                        variant='outlined'
                     />
                 </FormControl>
                 <FormControl>
@@ -126,7 +152,6 @@ export default function LogInCard() {
                         type={showPassword ? 'text' : 'password'}
                         id="password"
                         autoComplete="current-password"
-                        autoFocus
                         required
                         fullWidth
                         variant="outlined"
@@ -155,7 +180,7 @@ export default function LogInCard() {
                                 fontFamily: 'Arial',
                                 fontSize: '14px',
                                 textDecoration: 'none',
-                                color: 'inherit',
+                                color: 'blue',
                                 '&:hover': {
                                     textDecoration: 'underline',
                                 },
@@ -169,11 +194,6 @@ export default function LogInCard() {
                     type="submit"
                     fullWidth
                     variant="contained"
-                    onClick={() => {
-                        if (validateInputs()) {
-                            navigate('/dashboard');
-                        }
-                    }}
                     sx={{
                         textTransform: 'none',
                         height: '7vh',
