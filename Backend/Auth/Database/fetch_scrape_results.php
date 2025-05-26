@@ -22,7 +22,6 @@ if ($result->num_rows > 0) {
             'meeting_title' => isset($row['meeting_title']) ? $row['meeting_title'] : 'No title',
             'meeting_location' => isset($row['meeting_location']) ? $row['meeting_location'] : 'No location',
             'meeting_time' => isset($row['meeting_time']) ? $row['meeting_time'] : 'N/A',
-            'meeting_date' => isset($row['meeting_date']) ? $row['meeting_date'] : 'N/A',
             'cc' => !empty($row['cc']) ? $row['cc'] : 'No CC',
             'bcc' => !empty($row['bcc']) ? $row['bcc'] : 'No BCC',
             'interested' => isset($row['interested']) ? $row['interested'] : false

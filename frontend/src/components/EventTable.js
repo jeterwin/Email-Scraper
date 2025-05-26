@@ -30,8 +30,7 @@ export default function EventTable({ showButton = true }) {
                     sender: item.sender,
                     sendDate: item.send_date,
                     location: item.meeting_location,
-                    date: item.meeting_date,
-                    time: item.meeting_time,
+                    datetime: item.meeting_time,
                     cc: item.cc,
                     checkbox: item.interested,
                 }));
@@ -102,24 +101,11 @@ export default function EventTable({ showButton = true }) {
                 </Typography>
             ),
         }),
-        columnHelper.accessor('date', {
-            id: 'date',
+        columnHelper.accessor('datetime', {
+            id: 'datetime',
             header: () => (
                 <Typography variant="caption" color="textSecondary">
-                    DATE
-                </Typography>
-            ),
-            cell: (info) => (
-                <Typography variant="body2" fontWeight="bold">
-                    {info.getValue()}
-                </Typography>
-            ),
-        }),
-        columnHelper.accessor('time', {
-            id: 'time',
-            header: () => (
-                <Typography variant="caption" color="textSecondary">
-                    TIME
+                    DATE & TIME
                 </Typography>
             ),
             cell: (info) => (
