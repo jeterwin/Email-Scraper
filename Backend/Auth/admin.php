@@ -3,7 +3,7 @@ require_once 'auth.php';
 require_once './Database/db.php';
 
 // Check if the user is logged in and is an admin
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'Admin') {
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     echo "Access denied!";
     exit();
 }

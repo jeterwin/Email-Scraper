@@ -1,8 +1,13 @@
 <?php
+header("Access-Control-Allow-Origin: http://localhost:3000");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+
 require_once '../auth.php';
 require_once 'db.php';
 
-if ($_SESSION['user_role'] !== 'Admin') {
+if ($_SESSION['user_role'] !== 'admin') {
     echo "Access denied!";
     exit();
 }
@@ -15,29 +20,14 @@ $stmt->execute();
 
 $result = $stmt->get_result();
 
-echo "<table>
-        <tr>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Action</th>
-        </tr>";
+$users = [];
 
 while ($row = $result->fetch_assoc()) {
-    echo "<tr>
-            <td>" . htmlspecialchars($row['username']) . "</td>
-            <td>" . htmlspecialchars($row['email']) . "</td>
-            <td>" . htmlspecialchars($row['role']) . "</td>
-            <td>
-                <form action='delete_user.php' method='post' onsubmit='return confirm(\"Are you sure you want to delete this user?\");'>
-                    <input type='hidden' name='user_id' value='" . $row['id'] . "'>
-                    <button type='submit' style='background-color: red; color: white; border: none; padding: 5px;'>Delete</button>
-                </form>
-            </td>
-          </tr>";
+    $users[] = $row;
 }
 
-echo "</table>";
-
 $stmt->close();
+
+header('Content-Type: application/json');
+echo json_encode($users);
 ?>

@@ -56,12 +56,10 @@ export default function ActivityGraph(props) {
                 const mappedData = response.data.map(item => ({
                     sendDate: item.send_date,
                 }));
-                const monthlyData = processCount(mappedData);
-                const months = Object.keys(monthlyData);
-                const counts = Object.values(monthlyData);
 
-                setCategories(months);
-                setEmailCounts(counts);
+                const { sortedMonths, sortedCounts } = processCount(mappedData);
+                setCategories(sortedMonths);
+                setEmailCounts(sortedCounts);
 
             } catch (error) {
                 console.error('Failed to fetch data: ', error);
@@ -86,7 +84,11 @@ export default function ActivityGraph(props) {
             }
         });
 
-        return monthlyCounts;
+        const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const sortedMonths = monthOrder.filter(month => month in monthlyCounts);
+        const sortedCounts = sortedMonths.map(month => monthlyCounts[month]);
+
+        return { sortedMonths, sortedCounts };
     }
 
     const barChartDataDailyTraffic = [

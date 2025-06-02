@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import Navbar from "../components/Navbar";
-import ActivityGraph from "../components/ActivityGraph";
+import UserTable from "../components/UserTable";
 import Footer from "../components/Footer";
 import FavEventTable from "../components/FavEventTable";
 import DashboardEventTable from "../components/DashboardEventTable";
@@ -10,8 +10,7 @@ export default function Dashboard() {
         <Box sx={{minHeight: '100vh', backgroundColor: '#f4f7fe', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
             <Navbar />
             <Box sx={{ display: "flex", flexDirection: "row" }}>
-                <ActivityGraph />
-                <FavEventTable selectedEvents />
+                <UserTable />
             </Box>
             <DashboardEventTable />
             <Footer />

@@ -21,11 +21,11 @@ function register_user($conn, $username, $password, $email, $role)
     $username_length = strlen($username);
     # Username length must be between [7, 20]
     if ($username_length > 20 || $username_length < 6) {
-        echo "Your username must not not exceed 20 characters.";
+        echo "Your username must be between 6 and 20 characters long. ";
         return false;
         # Email length < 40
     } else if (strlen($email) > 40) {
-        echo "Your email must not exceed 40 characters.";
+        echo "Your email must not exceed 40 characters. ";
         return false;
     }
 
@@ -37,11 +37,11 @@ function register_user($conn, $username, $password, $email, $role)
     if($result->num_rows > 0) {
         while($row = $result->fetch_assoc()) {
             if($row["username"] === $username) {
-                echo "Username already taken! <br>";
+                echo "Username already taken! ";
                 return false;
             }
             if($row["email"] === $email) {
-                echo "Email already taken! <br>";
+                echo "Email already taken! ";
                 return false;
             }
         }

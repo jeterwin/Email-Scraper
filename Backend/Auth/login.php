@@ -10,7 +10,7 @@ include 'Database/db.php';
 
 function login_user($conn, $username, $password)
 {
-    # Check if username, password, email are set
+    # Check if username, password, email, role are set
     $stmt = $conn->prepare("SELECT ID, username, password, role FROM Users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
@@ -19,17 +19,17 @@ function login_user($conn, $username, $password)
     if ($stmt->num_rows > 0) {
         $userId = "";
         $hashedPassword = "";
-        $role = "";
+        $userRole = "";
 
-        $stmt->bind_result($userId, $username, $hashedPassword, $role);
+        $stmt->bind_result($userId, $username, $hashedPassword, $userRole);
         $stmt->fetch();
 
         if (password_verify($password, $hashedPassword)) {
             $_SESSION['user_id'] = $userId;
             $_SESSION['username'] = $username;
-            $_SESSION['user_role'] = $role;
+            $_SESSION['user_role'] = $userRole;
 
-            return "Successfully logged in!";
+            return "Success:$userRole";
         } else {
             return "The password you provided is not correct";
         }

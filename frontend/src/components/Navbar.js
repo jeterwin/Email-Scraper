@@ -4,7 +4,6 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import CssBaseline from '@mui/material/CssBaseline';
 import useScrollTrigger from '@mui/material/useScrollTrigger';
-import { Link } from 'react-router-dom';
 import { Box, Button } from "@mui/material";
 import LogoutIcon from '@mui/icons-material/Logout';
 
@@ -33,6 +32,22 @@ export default function ElevateAppBar(props) {
         }
     }, []);
 
+    const handleLogout = async () => {
+        try {
+            const response = await fetch('http://localhost/email_scraper/Backend/Auth/logout.php', {
+                credentials: "include",
+            });
+            const result = await response.text();
+            console.log(result);
+
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.replace('/login');
+        } catch (error) {
+            console.log('Logout failed: ', error);
+        }
+    };
+
     return (
         <React.Fragment>
             <CssBaseline />
@@ -48,8 +63,7 @@ export default function ElevateAppBar(props) {
                                 !
                             </Typography>
                             <Button
-                                component={Link}
-                                to="/login"
+                                onClick={handleLogout}
                                 variant="outlined"
                                 color="error"
                                 endIcon={<LogoutIcon />}

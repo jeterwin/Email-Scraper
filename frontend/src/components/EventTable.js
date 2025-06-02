@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from "react";
 import {
     Box,
     Checkbox,
@@ -12,37 +12,12 @@ import {
     Typography
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import { createColumnHelper, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
 
 const columnHelper = createColumnHelper();
 
-export default function EventTable({ showButton = true }) {
-    const [tableData, setTableData] = useState([]);
+export default function EventTable({ data, showButton = true }) {
     const [sorting, setSorting] = React.useState([]);
-
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                const response = await axios.get('http://localhost/email_scraper/Backend/Auth/Database/fetch_scrape_results.php');
-                const mappedData = response.data.map(item => ({
-                    name: item.meeting_title,
-                    sender: item.sender,
-                    sendDate: item.send_date,
-                    location: item.meeting_location,
-                    datetime: item.meeting_time,
-                    cc: item.cc,
-                    checkbox: item.interested,
-                }));
-                setTableData(mappedData);
-            } catch (error) {
-                console.error('Failed to fetch data: ', error);
-            }
-        }
-
-        fetchData();
-    }, []);
-
 
     const columns = [
         columnHelper.accessor('name', {
@@ -148,7 +123,7 @@ export default function EventTable({ showButton = true }) {
     ];
 
     const table = useReactTable({
-        data: tableData,
+        data,
         columns,
         state: { sorting },
         onSortingChange: setSorting,

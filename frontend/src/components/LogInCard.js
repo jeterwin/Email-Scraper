@@ -43,6 +43,7 @@ export default function LogInCard() {
         const payload = new URLSearchParams({
             username: data.get('name'),
             password: data.get('password'),
+            role: data.get('role'),
         });
 
         try {
@@ -56,10 +57,16 @@ export default function LogInCard() {
             });
             const result = await response.text();
 
-            if (result.includes("Successfully logged in!")) {
+            if (result.startsWith("Success:")) {
+                const role = result.split(':')[1];
                 const username = String(data.get('name'));
                 localStorage.setItem('username', username);
-                navigate('/dashboard');
+
+                if (role === 'user') {
+                    navigate('/dashboard');
+                } else if (role === 'admin'){
+                    navigate('/adminDashboard');
+                }
             } else {
                 alert(result);
             }

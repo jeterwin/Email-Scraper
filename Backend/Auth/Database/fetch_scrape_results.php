@@ -6,10 +6,19 @@ header('Access-Control-Allow-Headers: Content-Type');
 require_once 'db.php';
 
 $sortBy = $_GET['sortBy'] ?? 'meeting_time';
+$limit = isset($_GET['limit']) ? (int) $_GET['limit'] : null;
 
-$sql = "SELECT * FROM scrape_results";
+$allowedSortFields = ['meeting_time', 'interested', 'send_date'];
+if (!in_array($sortBy, $allowedSortFields)) {
+    $sortBy = 'meeting_time';
+}
+
+$sql = "SELECT * FROM scrape_results ORDER BY $sortBy ASC";
+if ($limit) {
+    $sql .= " LIMIT " . $limit;
+}
+
 $result = $conn->query($sql);
-
 $meetings = [];
 
 if ($result->num_rows > 0) {
@@ -22,19 +31,11 @@ if ($result->num_rows > 0) {
             'meeting_title' => isset($row['meeting_title']) ? $row['meeting_title'] : 'No title',
             'meeting_location' => isset($row['meeting_location']) ? $row['meeting_location'] : 'No location',
             'meeting_time' => isset($row['meeting_time']) ? $row['meeting_time'] : 'N/A',
-            'cc' => !empty($row['cc']) ? $row['cc'] : 'No CC',
-            'bcc' => !empty($row['bcc']) ? $row['bcc'] : 'No BCC',
+            'cc' => !empty($row['cc']) ? $row['cc'] : '-',
+            'bcc' => !empty($row['bcc']) ? $row['bcc'] : '-',
             'interested' => isset($row['interested']) ? $row['interested'] : false
         ];
     }
-
-    usort($meetings, function ($a, $b) use ($sortBy) {
-            if ($sortBy === 'interested') {
-                return $b['interested'] <=> $a['interested'];
-            } else {
-                return strcmp($a['meeting_time'], $b['meeting_time']);
-            }
-        });
 
         echo json_encode($meetings);
     } else {

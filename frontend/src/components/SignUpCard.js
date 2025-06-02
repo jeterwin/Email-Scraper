@@ -94,7 +94,7 @@ export default function SignUpCard() {
 
         if (!email.value || !/\S+@\S+\.\S+/.test(email.value) || email.value.includes(' ')) {
             setEmailError(true);
-            setEmailErrorMessage(!email.value ? 'Please enter a valid email address.' : 'Email cannot contain spaces.');
+            setEmailErrorMessage(!email.value || !/\S+@\S+\.\S+/.test(email.value) ? 'Please enter a valid email address.' : 'Email cannot contain spaces.');
             isValid = false;
         } else {
             setEmailError(false);
