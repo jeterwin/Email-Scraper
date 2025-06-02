@@ -160,6 +160,7 @@ def extract_meeting_title(subject: str) -> str:
         r"[V][aă]\s+invit[ăa]m?\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[\-|,\\/]\s*|\s+\d|$)",
         r"[V][aă]\s+invit[ăa]m?\s+la\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
 
+        r"[Ii]nvita[țt]ie\s+la\s+([^']'[^']+[^']')",
         r"[Ii]nvita[țt]ie\s+la\s+[Ee]venimentul\s+(.*?)(?:\s*[-|,\\/]\s*|\s+\d|$)",
         r"[Ii]nvita[țt]ie\s+la\s+[Cc]onferin[tț]a\s+(.*?)(?:\s*[-|,\\/]\s*|\s+\d|$)",
         r"[Ii]nvita[țt]ie\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[-|,\\/]\s*|\s+\d|$)",
@@ -224,8 +225,8 @@ def extract_meeting_location(text):
 
     patterns = [
 
-        r"📍\s*(?:[Ll]oca[țt]i[ae][:\-]?\s*)?([A-Z][^.,\n]+)",
-        r"📍\s*(?:Location[:\-]?\s*)?([A-Z][^.,\n]+)",
+        r"📍\s*(?:[Ll]oca[țt]i[ae][:\-]?\s*)?([A-Z][^\n]+)",
+        r"📍\s*(?:Location[:\-]?\s*)?([A-Z][^\n]+)",
         r"[Ll]oca[țt]i[ae][:\-]?\s*?([A-Z][^.,\n]+)",
 
         r"\b[Ss]e\s+(?:va\s+)?desf[aă][șs]ura\s+(?:la|în)\s+([A-Z][^.,\n]+)",
@@ -382,7 +383,7 @@ def process_information():
                 'sender': email_from,
                 'subject': email_subject,
                 'send_date': email_date,
-                'meeting_title': email_subject,
+                'meeting_title': extracted_meeting_title,
                 'meeting_location': extracted_meeting_location,
                 'meeting_time': extracted_meeting_time,
                 'meeting_day': extracted_meeting_date,
