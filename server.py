@@ -112,15 +112,6 @@ def extract_date_time(inp):
 
     return extracted_date, extracted_time
 
-def join_date_time(date_str, time_str):
-    try:
-        combined = f"{date_str} {time_str}"
-        dt = datetime.strptime(combined, "%Y-%m-%d %H:%M")
-        return dt.strftime("%Y-%m-%d %H:%M")
-    except ValueError:
-        return None
-
-
 def extract_meeting_title(subject: str) -> str:
     subject = subject.strip()
 
@@ -293,8 +284,6 @@ def process_information():
         extracted_meeting_date, extracted_meeting_time = extract_date_time(email_body)
         extracted_meeting_title = extract_meeting_title(email_subject)
         extracted_meeting_location = extract_meeting_location(email_body)
-        extracted_meeting_datetime = join_date_time(extracted_meeting_date, extracted_meeting_time)
-
 
         print(f"Subject: {email_subject}")
         print(f"From: {email_from}")
