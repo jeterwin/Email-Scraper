@@ -9,12 +9,12 @@ from dotenv import load_dotenv, find_dotenv
 session = requests.Session()
 
 # check that this is the correct ath to your login.php
-login_url = "http://localhost/Backend/Auth/login.php"
+login_url = "http://localhost/email_scraper/Backend/Auth/login.php"
 
 # create an account on the index page, as an admin, and introduce the chosen username and password below
 login_data = {
-    "username": "",
-    "password": ""
+    "username": "UserUser",
+    "password": "test1234"
 }
 
 login_response = session.post(login_url, data=login_data)
@@ -300,7 +300,6 @@ def process_information():
         print(f"Extracted meeting location: {extracted_meeting_location}")
         print(f"Extracted meeting date: {extracted_meeting_date}")
         print(f"Extracted meeting time: {extracted_meeting_time}")
-        print(f"Sent extracted meeting datetime: {extracted_meeting_datetime}")
 
         if email_subject and "Missing Required Fields Alert" in email_subject:
             print("Ignored email with subject 'Missing Required Fields Alert'")
@@ -356,7 +355,7 @@ def process_information():
             return jsonify({"status": "received"}), 200
 
         else:
-            insert_url = "http://localhost/Backend/Events/insert_email_data.php"
+            insert_url = "http://localhost/email_scraper/Backend/Events/insert_email_data.php"
             data = {
                 'message_id': email_id,
                 'sender': email_from,
