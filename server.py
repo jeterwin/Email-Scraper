@@ -8,10 +8,13 @@ from dotenv import load_dotenv, find_dotenv
 
 session = requests.Session()
 
+# check that this is the correct ath to your login.php
 login_url = "http://localhost/Backend/Auth/login.php"
+
+# create an account on the index page, as an admin, and introduce the chosen username and password below
 login_data = {
-    "username": "alexia",
-    "password": "111"
+    "username": "",
+    "password": ""
 }
 
 login_response = session.post(login_url, data=login_data)
