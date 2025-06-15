@@ -8,19 +8,20 @@ from dotenv import load_dotenv, find_dotenv
 
 session = requests.Session()
 
+# check that this is the correct ath to your login.php
 login_url = "http://localhost/Backend/Auth/login.php"
+
+# create an account on the index page, as an admin, and introduce the chosen username and password below
 login_data = {
-    "username": "alexia",
-    "password": "111"
+    "username": "",
+    "password": ""
 }
 
 login_response = session.post(login_url, data=login_data)
-print("Login:", login_response.status_code)
+print("Login to login.php:", login_response.status_code)
 
 
 from flask import Flask, request, jsonify
-
-url = "http://localhost/Backend/Events/insert_email_data.php"
 
 month_translations = {
     "ianuarie": "January",
@@ -45,29 +46,8 @@ def extract_just_date(iso_datetime_str):
     except ValueError:
         return None
 
-
-# DD.MM.YYYY
+# change of date format to YYYY-MM-DD
 def convert_date(date_str):
-    try:
-        for ro, en in month_translations.items():
-            if ro in date_str.lower():
-                date_str = re.sub(ro, en, date_str, flags=re.IGNORECASE)
-                break
-
-        for fmt in ("%d/%m/%Y", "%d.%m.%Y", "%d-%m-%Y", "%d/%m/%y", "%d.%m.%y", "%d-%m-%y",
-                    "%d %B %Y", "%d %B, %Y", "%B %d, %Y", "%B %d %Y"):
-            try:
-                dt = datetime.strptime(date_str.strip(), fmt)
-                return dt.strftime("%d.%m.%Y")
-            except ValueError:
-                continue
-    except:
-        pass
-    return None
-
-
-# temporary change of date format to YYYY-MM-DD
-def convert_date_temporary(date_str):
     try:
         for ro, en in month_translations.items():
             if ro in date_str.lower():
@@ -116,9 +96,9 @@ def extract_date_time(inp):
         if match:
             groups = match.groups()
             if len(groups) == 1:
-                extracted_date = convert_date_temporary(groups[0])
+                extracted_date = convert_date(groups[0])
             elif len(groups) == 3:
-                extracted_date = convert_date_temporary(f"{groups[0]} {groups[1]} {groups[2]}")
+                extracted_date = convert_date(f"{groups[0]} {groups[1]} {groups[2]}")
             break
 
     # Extract time
@@ -134,8 +114,6 @@ def extract_date_time(inp):
             break
 
     return extracted_date, extracted_time
-
-
 
 def extract_meeting_title(subject: str) -> str:
     subject = subject.strip()
@@ -322,6 +300,7 @@ def process_information():
         print(f"Extracted meeting location: {extracted_meeting_location}")
         print(f"Extracted meeting date: {extracted_meeting_date}")
         print(f"Extracted meeting time: {extracted_meeting_time}")
+        print(f"Sent extracted meeting datetime: {extracted_meeting_datetime}")
 
         if email_subject and "Missing Required Fields Alert" in email_subject:
             print("Ignored email with subject 'Missing Required Fields Alert'")
@@ -385,8 +364,8 @@ def process_information():
                 'send_date': email_date,
                 'meeting_title': extracted_meeting_title,
                 'meeting_location': extracted_meeting_location,
+                'meeting_date': extracted_meeting_date,
                 'meeting_time': extracted_meeting_time,
-                'meeting_day': extracted_meeting_date,
                 'cc': email_cc,
                 'bcc': email_bcc
             }
