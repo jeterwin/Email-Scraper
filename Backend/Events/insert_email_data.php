@@ -2,7 +2,7 @@
 require_once '../Auth/auth.php';
 require_once '../Auth/Database/db.php';
 
-$requiredFields = ['message_id', 'sender', 'subject', 'send_date', 'meeting_title', 'meeting_location', 'meeting_time'];
+$requiredFields = ['message_id', 'sender', 'subject', 'send_date', 'meeting_title', 'meeting_location', 'meeting_date', 'meeting_time'];
 foreach ($requiredFields as $field) {
     if (!isset($_POST[$field])) {
         http_response_code(400);
@@ -17,9 +17,11 @@ $subject          = $_POST['subject'];
 $send_date        = $_POST['send_date']; // Expected: YYYY-MM-DD
 $meeting_title    = $_POST['meeting_title'];
 $meeting_location = $_POST['meeting_location'];
+$meeting_date     = $_POST['meeting_date'];
 $meeting_time     = $_POST['meeting_time'];
-$cc               = $_POST['cc'];
-$bcc              = $_POST['bcc'];
+
+$cc  = isset($_POST['cc']) ? $_POST['cc'] : null;
+$bcc = isset($_POST['bcc']) ? $_POST['bcc'] : null;
 
 if (!DateTime::createFromFormat('Y-m-d', $send_date)) {
     http_response_code(400);
@@ -27,7 +29,7 @@ if (!DateTime::createFromFormat('Y-m-d', $send_date)) {
     exit;
 }
 
-$datetime_string = $send_date . ' ' . $meeting_time;
+$datetime_string = $meeting_date . ' ' . $meeting_time;
 $meeting_datetime = DateTime::createFromFormat('Y-m-d H:i', $datetime_string);
 
 if (!$meeting_datetime) {
