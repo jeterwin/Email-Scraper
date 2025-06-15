@@ -15,12 +15,10 @@ login_data = {
 }
 
 login_response = session.post(login_url, data=login_data)
-print("Login:", login_response.status_code)
+print("Login to login.php:", login_response.status_code)
 
 
 from flask import Flask, request, jsonify
-
-url = "http://localhost/Backend/Events/insert_email_data.php"
 
 month_translations = {
     "ianuarie": "January",
@@ -45,29 +43,8 @@ def extract_just_date(iso_datetime_str):
     except ValueError:
         return None
 
-
-# DD.MM.YYYY
+# change of date format to YYYY-MM-DD
 def convert_date(date_str):
-    try:
-        for ro, en in month_translations.items():
-            if ro in date_str.lower():
-                date_str = re.sub(ro, en, date_str, flags=re.IGNORECASE)
-                break
-
-        for fmt in ("%d/%m/%Y", "%d.%m.%Y", "%d-%m-%Y", "%d/%m/%y", "%d.%m.%y", "%d-%m-%y",
-                    "%d %B %Y", "%d %B, %Y", "%B %d, %Y", "%B %d %Y"):
-            try:
-                dt = datetime.strptime(date_str.strip(), fmt)
-                return dt.strftime("%d.%m.%Y")
-            except ValueError:
-                continue
-    except:
-        pass
-    return None
-
-
-# temporary change of date format to YYYY-MM-DD
-def convert_date_temporary(date_str):
     try:
         for ro, en in month_translations.items():
             if ro in date_str.lower():
@@ -116,9 +93,9 @@ def extract_date_time(inp):
         if match:
             groups = match.groups()
             if len(groups) == 1:
-                extracted_date = convert_date_temporary(groups[0])
+                extracted_date = convert_date(groups[0])
             elif len(groups) == 3:
-                extracted_date = convert_date_temporary(f"{groups[0]} {groups[1]} {groups[2]}")
+                extracted_date = convert_date(f"{groups[0]} {groups[1]} {groups[2]}")
             break
 
     # Extract time
@@ -135,6 +112,13 @@ def extract_date_time(inp):
 
     return extracted_date, extracted_time
 
+def join_date_time(date_str, time_str):
+    try:
+        combined = f"{date_str} {time_str}"
+        dt = datetime.strptime(combined, "%Y-%m-%d %H:%M")
+        return dt.strftime("%Y-%m-%d %H:%M")
+    except ValueError:
+        return None
 
 
 def extract_meeting_title(subject: str) -> str:
@@ -160,6 +144,7 @@ def extract_meeting_title(subject: str) -> str:
         r"[V][aă]\s+invit[ăa]m?\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[\-|,\\/]\s*|\s+\d|$)",
         r"[V][aă]\s+invit[ăa]m?\s+la\s+(.*?)(?:\s*[\-|:|,\\/]\s*|\s+\d|$)",
 
+        r"[Ii]nvita[țt]ie\s+la\s+([^']'[^']+[^']')",
         r"[Ii]nvita[țt]ie\s+la\s+[Ee]venimentul\s+(.*?)(?:\s*[-|,\\/]\s*|\s+\d|$)",
         r"[Ii]nvita[țt]ie\s+la\s+[Cc]onferin[tț]a\s+(.*?)(?:\s*[-|,\\/]\s*|\s+\d|$)",
         r"[Ii]nvita[țt]ie\s+la\s+[IÎiî]nt[âa]lnirea\s+(.*?)(?:\s*[-|,\\/]\s*|\s+\d|$)",
@@ -224,8 +209,8 @@ def extract_meeting_location(text):
 
     patterns = [
 
-        r"📍\s*(?:[Ll]oca[țt]i[ae][:\-]?\s*)?([A-Z][^.,\n]+)",
-        r"📍\s*(?:Location[:\-]?\s*)?([A-Z][^.,\n]+)",
+        r"📍\s*(?:[Ll]oca[țt]i[ae][:\-]?\s*)?([A-Z][^\n]+)",
+        r"📍\s*(?:Location[:\-]?\s*)?([A-Z][^\n]+)",
         r"[Ll]oca[țt]i[ae][:\-]?\s*?([A-Z][^.,\n]+)",
 
         r"\b[Ss]e\s+(?:va\s+)?desf[aă][șs]ura\s+(?:la|în)\s+([A-Z][^.,\n]+)",
@@ -308,6 +293,8 @@ def process_information():
         extracted_meeting_date, extracted_meeting_time = extract_date_time(email_body)
         extracted_meeting_title = extract_meeting_title(email_subject)
         extracted_meeting_location = extract_meeting_location(email_body)
+        extracted_meeting_datetime = join_date_time(extracted_meeting_date, extracted_meeting_time)
+
 
         print(f"Subject: {email_subject}")
         print(f"From: {email_from}")
@@ -321,6 +308,7 @@ def process_information():
         print(f"Extracted meeting location: {extracted_meeting_location}")
         print(f"Extracted meeting date: {extracted_meeting_date}")
         print(f"Extracted meeting time: {extracted_meeting_time}")
+        print(f"Sent extracted meeting datetime: {extracted_meeting_datetime}")
 
         if email_subject and "Missing Required Fields Alert" in email_subject:
             print("Ignored email with subject 'Missing Required Fields Alert'")
@@ -382,10 +370,10 @@ def process_information():
                 'sender': email_from,
                 'subject': email_subject,
                 'send_date': email_date,
-                'meeting_title': email_subject,
+                'meeting_title': extracted_meeting_title,
                 'meeting_location': extracted_meeting_location,
+                'meeting_date': extracted_meeting_date,
                 'meeting_time': extracted_meeting_time,
-                'meeting_day': extracted_meeting_date,
                 'cc': email_cc,
                 'bcc': email_bcc
             }
