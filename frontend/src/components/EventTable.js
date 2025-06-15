@@ -16,7 +16,7 @@ import { createColumnHelper, flexRender, getCoreRowModel, getSortedRowModel, use
 
 const columnHelper = createColumnHelper();
 
-export default function EventTable({ data, showButton = true }) {
+export default function EventTable({ data, selectedIds=[], onToggleVote, showButton = true }) {
     const [sorting, setSorting] = React.useState([]);
 
     const columns = [
@@ -110,11 +110,19 @@ export default function EventTable({ data, showButton = true }) {
                 </Typography>
             ),
             cell: (info) => {
-                const row = info.row.original;
+                const id = info.row.original.id;
+                const checked = selectedIds.includes(id);
                 return (
                     <Box display="flex" alignItems="center">
                         <Checkbox
                             size="small"
+                            checked={checked}
+                            // onChange={() => onToggleVote(id, !checked)}
+                            onChange={() => {
+                                console.log('Toggling vote for:', id, 'currently checked:', !checked);
+                                onToggleVote(id, !checked);
+                            }}
+
                             sx={{ mr: 1 }} />
                     </Box>
                 );

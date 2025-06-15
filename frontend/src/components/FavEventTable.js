@@ -16,24 +16,45 @@ import {
     getCoreRowModel,
     useReactTable,
 } from "@tanstack/react-table";
+import Button from "@mui/material/Button";
 
 const columnHelper = createColumnHelper();
 
 export default function FavEventTable({ selectedData = [] }) {
     const columns = [
-        columnHelper.accessor('checkbox', {
-            id: 'checkbox',
+        columnHelper.accessor('daysDue', {
+            id: 'daysDue',
             cell: (info) => {
                 const row = info.row.original;
+                const now = new Date();
+                const eventDate = new Date(row.datetime);
+                const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const eventMidnight = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+
+                const msInDay = 1000 * 60 * 60 * 24;
+                const diffTime = eventMidnight - nowMidnight;
+                const diffDays = Math.floor(diffTime / msInDay);
+
+                let displayText;
+                if (diffDays > 0) {
+                    displayText = (
+                        <>
+                            in <Box component="span" fontWeight="bold">{diffDays}</Box> day{diffDays > 1 ? "s" : ""}
+                        </>
+                    );
+                } else if (diffDays === 0) {
+                    displayText = <Box component="span" fontWeight="bold">Today</Box>;
+                } else {
+                    displayText = <Box component="span" fontWeight="bold">Passed</Box>;
+                }
+
                 return (
-                    <Checkbox
-                        checked={true}
-                        size="small"
-                    />
+                    <Typography variant="subtitle2" color="text.primary">
+                        {displayText}
+                    </Typography>
                 );
             },
         }),
-
         columnHelper.accessor('summary', {
             id: 'summary',
             cell: (info) => {
@@ -47,9 +68,51 @@ export default function FavEventTable({ selectedData = [] }) {
                             </Box>
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            {row.date} {row.time} {row.location}
+                            {(row.datetime).toLocaleString()} — {row.location}
                         </Typography>
                     </Box>
+                );
+            },
+        }),
+        columnHelper.display( {
+            id: 'drop',
+            cell: ({ row }) => {
+                const user = row.original;
+                // const handlePromote = async () => {
+                //     try{
+                //         const response = await fetch("http://localhost/email_scraper/Backend/Auth/promote.php", {
+                //             method: 'POST',
+                //             headers: {
+                //                 "Content-Type": "application/x-www-form-urlencoded",
+                //             },
+                //             body: new URLSearchParams({ user_id: user.id }),
+                //             credentials: "include",
+                //         });
+                //         const message = await response.text();
+                //         console.log(message)
+                //
+                //         if (response.ok){
+                //             setTableData(prev =>
+                //                 prev.map(u =>
+                //                     u.id === user.id ? { ...u, role: 'admin' } : u
+                //                 )
+                //             );
+                //         } else {
+                //             console.error("Promotion failed: ", message);
+                //         }
+                //     } catch (error){
+                //         console.error("Error promoting user: ", error);
+                //     }
+                // };
+
+                return (
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        // onClick={handlePromote}
+                    >
+                        Remove
+                    </Button>
                 );
             },
         }),
@@ -77,7 +140,10 @@ export default function FavEventTable({ selectedData = [] }) {
                 </Typography>
             </Box>
 
-            <TableContainer>
+            <TableContainer sx = {{
+                maxHeight: "35vh",
+                overflowY: "auto",
+            }}>
                 <Table size="small">
                     <TableBody>
                         {table.getRowModel().rows.length === 0 ? (

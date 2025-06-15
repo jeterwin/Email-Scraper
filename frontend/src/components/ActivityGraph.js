@@ -54,7 +54,7 @@ export default function ActivityGraph(props) {
             try {
                 const response = await axios.get('http://localhost/email_scraper/Backend/Auth/Database/fetch_scrape_results.php');
                 const mappedData = response.data.map(item => ({
-                    sendDate: item.send_date,
+                    time: item.meeting_time,
                 }));
 
                 const { sortedMonths, sortedCounts } = processCount(mappedData);
@@ -73,7 +73,7 @@ export default function ActivityGraph(props) {
     const processCount = (data) => {
         const monthlyCounts = {};
         data.forEach((item) => {
-            const date = new Date(item.sendDate);
+            const date = new Date(item.time);
             const dateString = date.toString();
             const month = dateString.split(' ')[1];
 
@@ -93,7 +93,7 @@ export default function ActivityGraph(props) {
 
     const barChartDataDailyTraffic = [
         {
-            name: "Mails",
+            name: "No. of events",
             data: emailCounts,
         }
     ]

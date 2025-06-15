@@ -12,7 +12,7 @@ if ($_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
-$sql = "SELECT id, username, email, role FROM users WHERE id != ?";
+$sql = "SELECT ID, username, email, role FROM users WHERE ID != ?";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $_SESSION['user_id']);
