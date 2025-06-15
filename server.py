@@ -300,7 +300,6 @@ def process_information():
         print(f"Extracted meeting location: {extracted_meeting_location}")
         print(f"Extracted meeting date: {extracted_meeting_date}")
         print(f"Extracted meeting time: {extracted_meeting_time}")
-        print(f"Sent extracted meeting datetime: {extracted_meeting_datetime}")
 
         if email_subject and "Missing Required Fields Alert" in email_subject:
             print("Ignored email with subject 'Missing Required Fields Alert'")
