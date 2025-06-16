@@ -22,13 +22,21 @@ function Navbar(props) {
         : null;
 }
 
-export default function ElevateAppBar(props) {
+export default function ElevateAppBar({ roleToggle }) {
     const [username, setUsername] = React.useState('');
+    const [role, setRole] = React.useState('');
 
     React.useEffect(() => {
         const storedUsername = localStorage.getItem('username');
         if (storedUsername) {
             setUsername(storedUsername);
+        }
+    }, []);
+
+    React.useEffect(() => {
+        const storedRole = localStorage.getItem('role');
+        if (storedRole) {
+            setRole(storedRole);
         }
     }, []);
 
@@ -51,7 +59,7 @@ export default function ElevateAppBar(props) {
     return (
         <React.Fragment>
             <CssBaseline />
-            <Navbar {...props}>
+            <Navbar>
                 <AppBar position='fixed' style={{ backgroundColor: 'white', boxShadow: 'none' }}>
                     <Toolbar >
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', width: '100%' }}>
@@ -62,6 +70,7 @@ export default function ElevateAppBar(props) {
                                 </Box>
                                 !
                             </Typography>
+                            {role === 'admin' ? roleToggle : null}
                             <Button
                                 onClick={handleLogout}
                                 variant="outlined"

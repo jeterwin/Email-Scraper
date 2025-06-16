@@ -61,6 +61,7 @@ export default function LogInCard() {
                 const role = result.split(':')[1];
                 const username = String(data.get('name'));
                 localStorage.setItem('username', username);
+                localStorage.setItem('role', role);
 
                 if (role === 'user') {
                     navigate('/dashboard');

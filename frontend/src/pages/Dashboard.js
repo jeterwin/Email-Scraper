@@ -7,15 +7,17 @@ import ActivityGraph from "../components/ActivityGraph";
 import Footer from "../components/Footer";
 import FavEventTable from "../components/FavEventTable";
 import DashboardEventTable from "../components/DashboardEventTable";
+import ElevateAppBar from "../components/Navbar";
+import RoleToggle from "../components/RoleToggle";
 
 export default function Dashboard() {
     const [events, setEvents] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
     const [selectedEvents, setSelectedEvents] = useState([]);
+    const userRole = localStorage.getItem("role");
 
     useEffect(() => {
         const fetchEvents = async () => {
-            // 1. Fetch top 5 events
             const response = await axios.get("http://localhost/email_scraper/Backend/Auth/Database/fetch_scrape_results.php?limit=5&sortBy=meeting_time");
             const topEvents = response.data.map((item) => ({
                 id: item.message_ID,
@@ -29,7 +31,6 @@ export default function Dashboard() {
             }));
             setEvents(topEvents);
 
-            // 2. Fetch voted events with full data
             const votesResponse = await axios.get("http://localhost/email_scraper/Backend/Events/get_user_votes.php", {
                 withCredentials: true
             });
@@ -75,10 +76,11 @@ export default function Dashboard() {
                 });
 
                 if (interested) {
-                    // Try to find in top 5 first
                     const newEvent = events.find(e => e.id === eventId);
                     if (newEvent && !selectedEvents.some(e => e.id === eventId)) {
-                        setSelectedEvents(prev => [...prev, newEvent]);
+                        setSelectedEvents(prev =>
+                            [...prev, newEvent].sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
+                        );
                     }
                 } else {
                     setSelectedEvents(prev => prev.filter(e => e.id !== eventId));
@@ -92,10 +94,10 @@ export default function Dashboard() {
 
     return (
         <Box sx={{minHeight: '100vh', backgroundColor: '#f4f7fe', backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
-            <Navbar />
+            { userRole === 'user' ? <ElevateAppBar roleToggle={null}/> : null}
             <Box sx={{ display: "flex", flexDirection: "row" }}>
                 <ActivityGraph />
-                <FavEventTable selectedData={selectedEvents}/>
+                <FavEventTable selectedData={selectedEvents} setSelectedEvents={setSelectedEvents} setSelectedIds={setSelectedIds}/>
             </Box>
             <DashboardEventTable data={events} selectedIds={selectedIds} onToggleVote={toggleVote} />
             <Footer />

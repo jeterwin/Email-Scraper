@@ -1,7 +1,6 @@
 import React from "react";
 import {
     Box,
-    Checkbox,
     Paper,
     Table,
     TableBody,
@@ -20,7 +19,7 @@ import Button from "@mui/material/Button";
 
 const columnHelper = createColumnHelper();
 
-export default function FavEventTable({ selectedData = [] }) {
+export default function FavEventTable({ selectedData = [], setSelectedEvents, setSelectedIds }) {
     const columns = [
         columnHelper.accessor('daysDue', {
             id: 'daysDue',
@@ -77,39 +76,35 @@ export default function FavEventTable({ selectedData = [] }) {
         columnHelper.display( {
             id: 'drop',
             cell: ({ row }) => {
-                const user = row.original;
-                // const handlePromote = async () => {
-                //     try{
-                //         const response = await fetch("http://localhost/email_scraper/Backend/Auth/promote.php", {
-                //             method: 'POST',
-                //             headers: {
-                //                 "Content-Type": "application/x-www-form-urlencoded",
-                //             },
-                //             body: new URLSearchParams({ user_id: user.id }),
-                //             credentials: "include",
-                //         });
-                //         const message = await response.text();
-                //         console.log(message)
-                //
-                //         if (response.ok){
-                //             setTableData(prev =>
-                //                 prev.map(u =>
-                //                     u.id === user.id ? { ...u, role: 'admin' } : u
-                //                 )
-                //             );
-                //         } else {
-                //             console.error("Promotion failed: ", message);
-                //         }
-                //     } catch (error){
-                //         console.error("Error promoting user: ", error);
-                //     }
-                // };
+                const event = row.original;
+                const handleRemove = async () => {
+                    try{
+                        const response = await fetch("http://localhost/email_scraper/Backend/Events/delete_event_interested.php", {
+                            method: 'POST',
+                            headers: {
+                                "Content-Type": "application/x-www-form-urlencoded",
+                            },
+                            body: new URLSearchParams({ event_id: event.id }),
+                            credentials: "include",
+                        });
+                        const message = await response.text();
+                        console.log(message)
 
+                        if (response.ok){
+                            setSelectedEvents(prev => prev.filter(e => e.id !== event.id));
+                            setSelectedIds(prev => prev.filter(id => id !== event.id));
+                        } else {
+                            console.error("Failed to remove votes: ", message);
+                        }
+                    } catch (error){
+                        console.error("Error removing vote: ", error);
+                    }
+                };
                 return (
                     <Button
                         variant="outlined"
                         size="small"
-                        // onClick={handlePromote}
+                        onClick={handleRemove}
                     >
                         Remove
                     </Button>
