@@ -5,6 +5,8 @@ header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 
+session_start();
+
 include 'Database/db.php';
 
 function register_user($conn, $username, $password, $email, $role)
@@ -56,6 +58,9 @@ function register_user($conn, $username, $password, $email, $role)
 
 
     if ($success) {
+        $newUserId = $conn->insert_id;
+        $_SESSION['user_id'] = $newUserId;
+        $_SESSION['user_role'] = $role;
         echo "User registered successfully!\n";
     } else {
         echo "Something failed\n";

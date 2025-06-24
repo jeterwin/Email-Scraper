@@ -16,7 +16,7 @@ import { createColumnHelper, flexRender, getCoreRowModel, getSortedRowModel, use
 
 const columnHelper = createColumnHelper();
 
-export default function EventTable({ data, selectedIds=[], onToggleVote, showButton = true }) {
+export default function EventTable({ data, selectedIds=[], onToggleVote, showButton = true, title = "All Events" }) {
     const [sorting, setSorting] = React.useState([]);
 
     const columns = [
@@ -153,7 +153,7 @@ export default function EventTable({ data, selectedIds=[], onToggleVote, showBut
         }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} marginLeft={1} marginRight={2}>
                 <Typography variant="h5" fontWeight="bold">
-                    Events
+                    {title}
                 </Typography>
                 <div>
                     {showButton && (

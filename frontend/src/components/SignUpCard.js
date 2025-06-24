@@ -55,12 +55,14 @@ export default function SignUpCard() {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
                 body: payload,
+                credentials: "include",
             });
             const result = await response.text();
 
             if (result.includes('Registered')) {
                 const username = String(data.get('name'));
                 localStorage.setItem('username', username);
+                localStorage.setItem('role', 'user');
                 navigate('/dashboard');
             } else {
                 alert(result);

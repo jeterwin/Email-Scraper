@@ -1,23 +1,33 @@
 <?php
+header("Access-Control-Allow-Origin: http://localhost:3000");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+
+
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit(0);
+}
+
 session_start();
 include '../Auth/Database/db.php';
 
-if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'Admin') {
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     http_response_code(403);
     echo "Acces interzis.";
     exit();
 }
 
 $sql = "
-    SELECT 
-        E.message_id,
+    SELECT
+        E.message_ID,
         E.meeting_title,
-        COUNT(V.id) AS total_votes,
-        SUM(V.interested) AS interested_votes
+        COUNT(V.user_ID) AS total_votes,
+        SUM(IFNULL(V.interested, 0)) AS interested_votes
     FROM scrape_results E
-    LEFT JOIN event_votes V ON E.message_id = V.event_id
-    GROUP BY E.message_id, E.meeting_title
-    ORDER BY E.meeting_day DESC
+    LEFT JOIN event_votes V ON E.message_ID = V.event_ID
+    GROUP BY E.message_ID, E.meeting_title
+    ORDER BY E.meeting_time DESC
 ";
 
 $result = $conn->query($sql);
@@ -29,3 +39,5 @@ while ($row = $result->fetch_assoc()) {
 
 header('Content-Type: application/json');
 echo json_encode($stats);
+
+?>

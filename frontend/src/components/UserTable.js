@@ -29,7 +29,7 @@ export default function UserTable() {
                     withCredentials: true,
                 });
                 const mappedData = response.data.map(item => ({
-                    id: item.id,
+                    id: item.ID,
                     username: item.username,
                     email: item.email,
                     role: item.role,
@@ -195,21 +195,25 @@ export default function UserTable() {
     return (
         <Paper elevation={0} sx={{
             p: 2,
-            width: "47%",
+            width: "45%",
             borderRadius: "20px",
             margin: "0 2%",
             marginTop: "2%",
+            marginBottom: "12px",
             boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.05)",
             backgroundColor: "white",
         }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} marginLeft={1} marginRight={2}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} marginLeft={1} >
                 <Typography variant="h5" fontWeight="bold">
-                    Users
+                    Manage Users
                 </Typography>
             </Box>
 
-            <TableContainer>
-                <Table size="small">
+            <TableContainer sx = {{
+                maxHeight: "40vh",
+                overflowY: "auto",
+            }}>
+                <Table size="small" stickyHeader>
                     <TableHead>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
@@ -236,7 +240,7 @@ export default function UserTable() {
                         {table.getRowModel().rows.map((row) => (
                             <TableRow key={row.id}>
                                 {row.getVisibleCells().map((cell) => (
-                                    <TableCell key={cell.id}>
+                                    <TableCell key={cell.id} sx={{ height: 45 }}>
                                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                     </TableCell>
                                 ))}

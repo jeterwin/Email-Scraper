@@ -9,7 +9,7 @@ include './Database/db.php';
 
 function promote_to_admin($conn, $targetUserId) {
     // Check if current user is logged in and is an admin
-    if (!isset($_SESSION['user_id']) && $_SESSION['user_role'] !== 'admin') {
+    if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
         http_response_code(403);
         echo "Access denied. Only admins can perform this action.";
         exit();

@@ -18,9 +18,9 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
-$sql = "SELECT COUNT(*) AS total_accounts FROM users";
+$sql = "SELECT COUNT(*) AS event_count FROM scrape_results WHERE meeting_time > NOW()";
 $result = $conn->query($sql);
 $row = $result->fetch_assoc();
 
 header('Content-Type: application/json');
-echo json_encode(['total_accounts' => (int)$row['total_accounts']]);
+echo json_encode(['event_count' => (int)$row['event_count']]);

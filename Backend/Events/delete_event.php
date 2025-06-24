@@ -1,4 +1,13 @@
 <?php
+header("Access-Control-Allow-Origin: http://localhost:3000");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit(0);
+}
+
 session_start();
 include '../Auth/Database/db.php';
 
@@ -27,11 +36,6 @@ if (!$stmt->fetch()) {
     exit();
 }
 $stmt->close();
-
-if (strtotime($meeting_time) < time()) {
-    echo "The event has already occurred!";
-    exit();
-}
 
 // Delete the event
 $stmt = $conn->prepare("DELETE FROM scrape_results WHERE message_id = ?");

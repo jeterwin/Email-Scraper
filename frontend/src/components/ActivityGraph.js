@@ -32,7 +32,7 @@ const barChartOptionsDailyTraffic = {
         },
     },
     dataLabels: {
-        enabled: false,
+        enabled: true,
     },
     colors: ["#5DB075"],
     stroke: {
